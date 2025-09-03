@@ -26,11 +26,39 @@ import os
 
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
+from qgis.PyQt.QtWidgets import QFileDialog, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QMessageBox, QProgressDialog
+from qgis.PyQt.QtCore import Qt, QThread, pyqtSignal
+from qgis.core import QgsProject, QgsRasterLayer, QgsMapLayerProxyModel
+from qgis.gui import QgsMapLayerComboBox
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'annLandslide_dialog_base.ui'))
 
+class PredictionWorker(QThread):
+    """Worker thread for running predictions"""
+    finished = pyqtSignal()
+    error = pyqtSignal(str)
+    progress = pyqtSignal(str)
+    
+    def __init__(self, predictor, raster_paths, output_path, chunk_size=50000):
+        super().__init__()
+        self.predictor = predictor
+        self.raster_paths = raster_paths
+        self.output_path = output_path
+        self.chunk_size = chunk_size
+    
+    def run(self):
+        try:
+            self.predictor.process_rasters(
+                self.raster_paths, 
+                self.output_path, 
+                self.chunk_size,
+                progress_callback=self.progress.emit
+            )
+            self.finished.emit()
+        except Exception as e:
+            self.error.emit(str(e))
 
 class AnnLandslideDialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, parent=None):
@@ -42,3 +70,228 @@ class AnnLandslideDialog(QtWidgets.QDialog, FORM_CLASS):
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
+        
+        # Initialize variables
+        self.raster_combos = []
+        self.expected_rasters = [
+            'Aspect',
+            'Elevation', 
+            'Flow Accumulation',
+            'Plan Curvature',
+            'Profile Curvature',
+            'Rivers Proximity',
+            'Roads Proximity',
+            'Slope',
+            'Stream Power Index',
+            'Topographic Position Index',
+            'Terrain Ruggedness Index',
+            'Topographic Wetness Index',
+            'Lithology',
+            'Soil'
+        ]
+        
+        # Setup UI
+        self.setup_ui()
+        self.connect_signals()
+    
+    def setup_ui(self):
+        """Setup the user interface"""
+        # Create raster selection widgets
+        self.create_raster_selection_widgets()
+        
+        # Set default model path if exists
+        plugin_dir = os.path.dirname(__file__)
+        default_model = os.path.join(plugin_dir, 'python', 'landslide_model_advanced_complete.pth')
+        if os.path.exists(default_model):
+            self.lineEdit_model.setText(default_model)
+    
+    def create_raster_selection_widgets(self):
+        """Create widgets for raster layer selection"""
+        # Get the scroll area content widget
+        content_widget = self.scrollAreaWidgetContents
+        layout = QVBoxLayout(content_widget)
+        
+        # Create combo boxes for each expected raster
+        for i, raster_name in enumerate(self.expected_rasters):
+            # Create horizontal layout for each raster
+            h_layout = QHBoxLayout()
+            
+            # Create label
+            label = QLabel(f"{i+1}. {raster_name}:")
+            label.setMinimumWidth(200)
+            
+            # Create combo box for layer selection
+            combo = QgsMapLayerComboBox()
+            combo.setFilters(QgsMapLayerProxyModel.RasterLayer)
+            combo.setAllowEmptyLayer(True)
+            combo.setCurrentIndex(-1)
+            
+            h_layout.addWidget(label)
+            h_layout.addWidget(combo)
+            layout.addLayout(h_layout)
+            
+            self.raster_combos.append(combo)
+        
+        content_widget.setLayout(layout)
+    
+    def connect_signals(self):
+        """Connect UI signals to methods"""
+        self.pushButton_model.clicked.connect(self.browse_model)
+        self.pushButton_output.clicked.connect(self.browse_output)
+        self.button_box.accepted.connect(self.run_prediction)
+    
+    def browse_model(self):
+        """Browse for model file"""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select Trained Model",
+            "",
+            "PyTorch Models (*.pth);;All Files (*)"
+        )
+        if file_path:
+            self.lineEdit_model.setText(file_path)
+    
+    def browse_output(self):
+        """Browse for output file"""
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save Susceptibility Map",
+            "",
+            "GeoTIFF Files (*.tif);;All Files (*)"
+        )
+        if file_path:
+            self.lineEdit_output.setText(file_path)
+    
+    def validate_inputs(self):
+        """Validate user inputs"""
+        # Check model file
+        model_path = self.lineEdit_model.text().strip()
+        if not model_path:
+            QMessageBox.warning(self, "Input Error", "Please select a trained model file.")
+            return False
+        
+        if not os.path.exists(model_path):
+            QMessageBox.warning(self, "Input Error", "Model file does not exist.")
+            return False
+        
+        # Check output path
+        output_path = self.lineEdit_output.text().strip()
+        if not output_path:
+            QMessageBox.warning(self, "Input Error", "Please specify an output path.")
+            return False
+        
+        # Check raster layers
+        selected_layers = []
+        for i, combo in enumerate(self.raster_combos):
+            layer = combo.currentLayer()
+            if layer is None:
+                QMessageBox.warning(
+                    self, 
+                    "Input Error", 
+                    f"Please select a raster layer for {self.expected_rasters[i]}."
+                )
+                return False
+            selected_layers.append(layer)
+        
+        return True
+    
+    def get_raster_paths(self):
+        """Get the file paths of selected raster layers"""
+        raster_paths = []
+        for combo in self.raster_combos:
+            layer = combo.currentLayer()
+            if layer:
+                # Get the file path from the layer
+                source = layer.source()
+                # Remove any GDAL connection strings if present
+                if '|' in source:
+                    source = source.split('|')[0]
+                raster_paths.append(source)
+        return raster_paths
+    
+    def run_prediction(self):
+        """Run the prediction process"""
+        if not self.validate_inputs():
+            return
+        
+        try:
+            # Import the predictor (do this here to handle missing dependencies gracefully)
+            try:
+                from .landslide_model import LandslideSusceptibilityPredictor
+            except ImportError as e:
+                QMessageBox.critical(
+                    self,
+                    "Dependency Error",
+                    f"Missing required dependencies: {str(e)}\n\n"
+                    "Please ensure PyTorch, scikit-learn, and other required packages are installed."
+                )
+                return
+            
+            # Get inputs
+            model_path = self.lineEdit_model.text().strip()
+            output_path = self.lineEdit_output.text().strip()
+            raster_paths = self.get_raster_paths()
+            threshold = self.doubleSpinBox_threshold.value()
+            
+            # Initialize predictor
+            predictor = LandslideSusceptibilityPredictor()
+            
+            # Load model
+            predictor.load_model(model_path)
+            predictor.threshold = threshold
+            
+            # Setup scaler (try to find training data)
+            plugin_dir = os.path.dirname(__file__)
+            training_data_path = os.path.join(plugin_dir, 'python', 'output_landslides.csv')
+            if os.path.exists(training_data_path):
+                predictor.setup_scaler(training_data_path)
+            else:
+                predictor.setup_scaler()
+            
+            # Create progress dialog
+            progress_dialog = QProgressDialog("Processing rasters...", "Cancel", 0, 100, self)
+            progress_dialog.setWindowTitle("ANN Landslide Susceptibility")
+            progress_dialog.setWindowModality(Qt.WindowModal)
+            progress_dialog.show()
+            
+            # Create and start worker thread
+            self.worker = PredictionWorker(predictor, raster_paths, output_path)
+            
+            # Connect worker signals
+            self.worker.progress.connect(lambda msg: progress_dialog.setLabelText(msg))
+            self.worker.finished.connect(lambda: self.on_prediction_finished(progress_dialog, output_path))
+            self.worker.error.connect(lambda error: self.on_prediction_error(progress_dialog, error))
+            
+            self.worker.start()
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
+    
+    def on_prediction_finished(self, progress_dialog, output_path):
+        """Handle successful completion of prediction"""
+        progress_dialog.close()
+        
+        # Ask if user wants to add result to map
+        reply = QMessageBox.question(
+            self,
+            "Success",
+            f"Susceptibility map created successfully!\n\nWould you like to add it to the map?",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        
+        if reply == QMessageBox.Yes:
+            # Add the result to the map
+            layer_name = "Landslide Susceptibility"
+            layer = QgsRasterLayer(output_path, layer_name)
+            if layer.isValid():
+                QgsProject.instance().addMapLayer(layer)
+            else:
+                QMessageBox.warning(self, "Warning", "Could not add the result layer to the map.")
+        
+        # Close the dialog
+        self.accept()
+    
+    def on_prediction_error(self, progress_dialog, error_message):
+        """Handle prediction error"""
+        progress_dialog.close()
+        QMessageBox.critical(self, "Prediction Error", f"An error occurred during prediction:\n\n{error_message}")

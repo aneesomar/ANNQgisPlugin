@@ -5,19 +5,179 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>600</width>
+    <height>500</height>
    </rect>
   </property>
   <property name="windowTitle" >
    <string>ANN Landslide Susceptibility</string>
   </property>
+  
+  <widget class="QLabel" name="label_model">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>20</y>
+     <width>120</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Trained Model:</string>
+   </property>
+  </widget>
+  
+  <widget class="QLineEdit" name="lineEdit_model">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>20</y>
+     <width>350</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="placeholderText">
+    <string>Path to trained model (.pth file)</string>
+   </property>
+  </widget>
+  
+  <widget class="QPushButton" name="pushButton_model">
+   <property name="geometry">
+    <rect>
+     <x>510</x>
+     <y>20</y>
+     <width>70</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Browse</string>
+   </property>
+  </widget>
+
+  <widget class="QLabel" name="label_output">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>60</y>
+     <width>120</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Output Path:</string>
+   </property>
+  </widget>
+  
+  <widget class="QLineEdit" name="lineEdit_output">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>60</y>
+     <width>350</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="placeholderText">
+    <string>Output susceptibility map (.tif)</string>
+   </property>
+  </widget>
+  
+  <widget class="QPushButton" name="pushButton_output">
+   <property name="geometry">
+    <rect>
+     <x>510</x>
+     <y>60</y>
+     <width>70</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Browse</string>
+   </property>
+  </widget>
+  
+  <widget class="QGroupBox" name="groupBox_rasters">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>100</y>
+     <width>560</width>
+     <height>300</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Input Raster Layers (in correct order)</string>
+   </property>
+   
+   <widget class="QScrollArea" name="scrollArea">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>25</y>
+      <width>540</width>
+      <height>265</height>
+     </rect>
+    </property>
+    <property name="widgetResizable">
+     <bool>true</bool>
+    </property>
+    <widget class="QWidget" name="scrollAreaWidgetContents">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>538</width>
+       <height>263</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
+  </widget>
+
+  <widget class="QLabel" name="label_threshold">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>420</y>
+     <width>120</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Threshold:</string>
+   </property>
+  </widget>
+  
+  <widget class="QDoubleSpinBox" name="doubleSpinBox_threshold">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>420</y>
+     <width>100</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="minimum">
+    <double>0.000000000000000</double>
+   </property>
+   <property name="maximum">
+    <double>1.000000000000000</double>
+   </property>
+   <property name="singleStep">
+    <double>0.010000000000000</double>
+   </property>
+   <property name="value">
+    <double>0.500000000000000</double>
+   </property>
+  </widget>
+  
   <widget class="QDialogButtonBox" name="button_box" >
    <property name="geometry" >
     <rect>
-     <x>30</x>
-     <y>240</y>
-     <width>341</width>
+     <x>430</x>
+     <y>450</y>
+     <width>150</width>
      <height>32</height>
     </rect>
    </property>
