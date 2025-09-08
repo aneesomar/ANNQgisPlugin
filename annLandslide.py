@@ -26,7 +26,12 @@ from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
 # Initialize Qt resources from file resources.py
-from .resources import *
+try:
+    from .resources import *
+except ImportError:
+    # Resources not available, continue without them
+    pass
+
 # Import the code for the dialog
 from .annLandslide_dialog import AnnLandslideDialog
 import os.path
