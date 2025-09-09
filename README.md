@@ -26,7 +26,10 @@ annlandslide/
 │   ├── landslide_model.py            # Original model (legacy)
 │   └── landslide_model_simple_safe.py # Current safe model
 │
-├── 📚 Documentation
+├── � Packages
+│   └── annlandslide_v2.1.zip         # ⭐ Ready-to-install ZIP package
+│
+├── �📚 Documentation
 │   └── SAFE_VERSION_SUMMARY.md       # Detailed version information
 │
 ├── 🎯 Models
@@ -39,19 +42,26 @@ annlandslide/
 │   └── i18n/                         # Translation files
 │
 └── 📋 Configuration
+    ├── install.sh                    # Manual installation script
+    ├── create_zip_package.sh         # ZIP package creator
     ├── requirements.txt               # Dependencies
     └── README.md                     # This file
 ```
 
 ## 🔧 Installation
 
-1. Copy all plugin files to your QGIS plugins directory:
-   ```
-   ~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/annlandslide/
-   ```
+### Option 1: Easy ZIP Installation (Recommended)
+1. Download the plugin package: `packages/annlandslide_v2.1.zip`
+2. Open QGIS
+3. Go to **Plugins** → **Manage and Install Plugins**
+4. Click **"Install from ZIP"**
+5. Select the downloaded `annlandslide_v2.1.zip` file
+6. Click **"Install Plugin"**
+7. Enable the plugin in the plugins list
 
+### Option 2: Manual Installation
+1. Run the installation script: `./install.sh`
 2. Restart QGIS
-
 3. Enable the plugin in **Plugins** → **Manage and Install Plugins**
 
 ## 📊 Required Input Data
