@@ -3,14 +3,14 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=ANN Landslide Susceptibility
+name=ANN Landslide Susceptibility - Safe Version
 qgisMinimumVersion=3.0
-description=Creates landslide susceptibility maps using trained Artificial Neural Networks
-version=1.0
+description=Simple and safe landslide susceptibility prediction using ANN with robust error handling
+version=2.1
 author=Anees Omar
 email=aneesomar.ao@gmail.com
 
-about=The ANN Landslide Susceptibility plugin allows QGIS users to generate landslide susceptibility maps using a pre-trained Artificial Neural Network model. The plugin processes multiple raster input layers (elevation, slope, curvature, proximity to rivers/roads, lithology, soil, etc.) and applies an advanced ANN model with attention mechanisms and residual blocks to predict landslide susceptibility. Features include: automatic raster processing and alignment, memory-efficient chunk-based processing for large datasets, integration with QGIS raster layer management, customizable prediction thresholds, and automatic map visualization. The output is a continuous susceptibility map showing areas of varying landslide risk, essential for hazard assessment, land use planning, and risk management.
+about=The ANN Landslide Susceptibility plugin (SIMPLE VERSION) generates landslide susceptibility maps using a pre-trained Artificial Neural Network. This version provides: single-threaded processing for system stability, proper progress tracking (0-100%), reduced memory usage, and maximum compatibility. The plugin processes multiple raster layers (elevation, slope, curvature, proximity to rivers/roads, lithology, soil, etc.) and applies an ANN model to predict landslide susceptibility. Features: automatic raster processing, chunk-based processing for large datasets, QGIS integration, customizable thresholds, and automatic visualization. Perfect for users experiencing performance issues with complex versions.
 
 tracker=https://github.com/aneesomar/ANNQgisPlugin/issues
 repository=https://github.com/aneesomar/ANNQgisPlugin
