@@ -19,32 +19,30 @@ annlandslide/
 │   ├── annLandslide.py               # Main plugin class
 │   ├── annLandslide_dialog.py        # User interface dialog
 │   ├── annLandslide_dialog_base.ui   # UI design file
+│   ├── landslide_model_simple_safe.py # Safe model implementation
 │   ├── metadata.txt                  # Plugin metadata
 │   └── icon.png                      # Plugin icon
 │
-├── 🧠 Model Files
-│   ├── landslide_model.py            # Original model (legacy)
-│   └── landslide_model_simple_safe.py # Current safe model
-│
-├── � Packages
+├── 📦 Packages
 │   └── annlandslide_v2.1.zip         # ⭐ Ready-to-install ZIP package
-│
-├── �📚 Documentation
-│   └── SAFE_VERSION_SUMMARY.md       # Detailed version information
 │
 ├── 🎯 Models
 │   └── landslide_model_advanced_complete.pth # Pre-trained model
 │
-├── 📊 Outputs
-│   └── landslide_susceptibility_output.tif   # Sample output
+├── 🌍 Data & Examples
+│   ├── durbanRasters/                # Sample input rasters
+│   ├── outputs/                      # Sample outputs
+│   └── examples/                     # Example scripts
 │
 ├── 🌍 Internationalization
 │   └── i18n/                         # Translation files
 │
-└── 📋 Configuration
-    ├── install.sh                    # Manual installation script
+└── 📋 Configuration & Installation
+    ├── install.sh                    # Installation script
     ├── create_zip_package.sh         # ZIP package creator
     ├── requirements.txt               # Dependencies
+    ├── QGIS_INSTALLATION_GUIDE.md    # Installation guide
+    ├── QGIS_RELOAD_INSTRUCTIONS.md   # Reload instructions
     └── README.md                     # This file
 ```
 
@@ -63,6 +61,8 @@ annlandslide/
 1. Run the installation script: `./install.sh`
 2. Restart QGIS
 3. Enable the plugin in **Plugins** → **Manage and Install Plugins**
+
+> **Note**: The installation script automatically copies all necessary files to your QGIS plugins directory.
 
 ## 📊 Required Input Data
 
