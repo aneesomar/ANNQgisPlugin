@@ -1,0 +1,61 @@
+# -*- coding: utf-8 -*-
+"""
+/***************************************************************************
+ metadata.txt
+ Plugin metadata for QGIS Plugin Manager
+ ***************************************************************************/
+"""
+
+[general]
+name=ANN Landslide Susceptibility
+qgisMinimumVersion=3.0
+description=Complete ANN-based landslide susceptibility mapping and model training plugin
+version=2.1.0
+author=Anees Omar
+email=aneesomar.ao@gmail.com
+
+about=This plugin provides comprehensive landslide susceptibility mapping using Artificial Neural Networks (ANN). Features include: (1) Landslide susceptibility prediction using pre-trained or custom models, (2) Train new ANN models directly from QGIS raster layers and landslide points, (3) Multiple training methods: raster-based, CSV-based, and sample data generation, (4) Advanced neural network architecture with attention mechanisms and feature selection, (5) Progress tracking and comprehensive error handling, (6) Sample data generation for testing and learning. The plugin integrates seamlessly with QGIS workflows and provides both research-grade model training and practical susceptibility mapping capabilities.
+
+tracker=https://github.com/aneesomar/ANNQgisPlugin/issues
+repository=https://github.com/aneesomar/ANNQgisPlugin
+homepage=https://github.com/aneesomar/ANNQgisPlugin
+
+# Tags are comma separated with spaces allowed
+tags=landslide, susceptibility, neural network, machine learning, geohazard, risk assessment, training, prediction
+
+# Plugin icon
+icon=icon.png
+
+# Experimental flag
+experimental=False
+
+# Deprecated flag (applies to the whole plugin, not just a single version)
+deprecated=False
+
+# Since QGIS 3.8, a comma separated list of plugins to be installed
+# (or upgraded) can be specified.
+# Check the documentation for more information.
+# plugin_dependencies=
+
+# Category of the plugin: Raster, Vector, Database or Web
+category=Raster
+
+# Processing provider
+hasProcessingProvider=no
+
+# Changelog
+changelog=
+    Version 2.1.0 (2025-09-18):
+    - Added comprehensive model training capabilities
+    - Support for training from QGIS raster layers and landslide points
+    - CSV-based training for pre-processed data
+    - Sample data generation for testing
+    - Advanced neural network architecture with attention mechanisms
+    - Progress tracking and status updates
+    - Multiple fallback methods for robustness
+    - Comprehensive documentation and user guide
+    
+    Version 2.0.0:
+    - Initial release with landslide susceptibility prediction
+    - Pre-trained model support
+    - QGIS integration for raster processing

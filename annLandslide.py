@@ -34,6 +34,7 @@ except ImportError:
 
 # Import the code for the dialog
 from .annLandslide_dialog import AnnLandslideDialog
+from .comprehensive_training_dialog import ComprehensiveTrainingDialog
 import os.path
 
 
@@ -166,14 +167,24 @@ class AnnLandslide:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
         icon_path = ':/plugins/annLandslide/icon.png'
+        
+        # Action for running landslide susceptibility prediction
         self.add_action(
             icon_path,
-            text=self.tr(u''),
+            text=self.tr(u'Run Landslide Susceptibility'),
             callback=self.run,
+            parent=self.iface.mainWindow())
+            
+        # Action for training new models
+        self.add_action(
+            icon_path,
+            text=self.tr(u'Train New Model'),
+            callback=self.run_training,
             parent=self.iface.mainWindow())
 
         # will be set False in run()
         self.first_start = True
+        self.training_first_start = True
 
 
     def unload(self):
@@ -202,4 +213,19 @@ class AnnLandslide:
         if result:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
+            pass
+            
+    def run_training(self):
+        """Run method for model training dialog"""
+        
+        # Create the training dialog
+        if self.training_first_start == True:
+            self.training_first_start = False
+            self.training_dlg = ComprehensiveTrainingDialog()
+            
+        # Show the training dialog
+        self.training_dlg.show()
+        # Run the dialog event loop
+        result = self.training_dlg.exec_()
+        if result:
             pass

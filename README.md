@@ -1,61 +1,118 @@
-# ANN Landslide Susceptibility QGIS Plugin
+# ANN Landslide Susceptibility QGIS Plugin# ANN Landslide Susceptibility QGIS Plugin
 
-A robust QGIS plugin for landslide susceptibility prediction using Artificial Neural Networks (ANN).
+
+
+## 🎯 **Working Plugin Package**A robust QGIS plugin for landslide susceptibility prediction using Artificial Neural Networks (ANN).
+
+**Install this:** `annlandslide_FIXED_v2.zip` - The fully tested and working version
 
 ## 🚀 Features
 
+## 📂 **Project Structure**
+
 - **Safe & Stable**: Single-threaded processing with comprehensive error handling
-- **Progress Tracking**: Real-time progress updates with clear status messages
-- **Memory Efficient**: Adaptive chunk-based processing
-- **Error Recovery**: Graceful handling of missing or corrupted data
-- **Standard Output**: GeoTIFF format with proper georeferencing
 
-## 📁 Project Structure
+### **Core Plugin Files**- **Progress Tracking**: Real-time progress updates with clear status messages
+
+- `annLandslide.py` - Main plugin class- **Memory Efficient**: Adaptive chunk-based processing
+
+- `annLandslide_dialog.py` - Main dialog interface- **Error Recovery**: Graceful handling of missing or corrupted data
+
+- `comprehensive_training_dialog.py` - Training interface- **Standard Output**: GeoTIFF format with proper georeferencing
+
+- `__init__.py` - Plugin initialization
+
+- `metadata.txt` - Plugin metadata## 📁 Project Structure
+
+- `icon.png` - Plugin icon
 
 ```
-annlandslide/
-├── 📄 Core Plugin Files
-│   ├── __init__.py                    # Plugin initialization
-│   ├── annLandslide.py               # Main plugin class
+
+### **UI Files**annlandslide/
+
+- `annLandslide_dialog_base.ui` - Main dialog UI├── 📄 Core Plugin Files
+
+- `model_training_dialog_base.ui` - Training dialog UI│   ├── __init__.py                    # Plugin initialization
+
+- `model_training_dialog.py` - Training dialog controller│   ├── annLandslide.py               # Main plugin class
+
 │   ├── annLandslide_dialog.py        # User interface dialog
-│   ├── annLandslide_dialog_base.ui   # UI design file
-│   ├── landslide_model_simple_safe.py # Safe model implementation
-│   ├── metadata.txt                  # Plugin metadata
-│   └── icon.png                      # Plugin icon
-│
+
+### **Training Modules**│   ├── annLandslide_dialog_base.ui   # UI design file
+
+- `ann_training_module.py` - Advanced QGIS-based training│   ├── landslide_model_simple_safe.py # Safe model implementation
+
+- `simple_training_module.py` - Simplified training│   ├── metadata.txt                  # Plugin metadata
+
+- `csv_only_training.py` - Minimal dependency training (the one that works!)│   └── icon.png                      # Plugin icon
+
+- `raster_data_extractor.py` - Raster processing utilities│
+
 ├── 📦 Packages
-│   └── annlandslide_v2.1.zip         # ⭐ Ready-to-install ZIP package
-│
+
+### **Prediction Module**│   └── annlandslide_v2.1.zip         # ⭐ Ready-to-install ZIP package
+
+- `landslide_model_simple_safe.py` - Model prediction and mapping│
+
 ├── 🎯 Models
-│   └── landslide_model_advanced_complete.pth # Pre-trained model
-│
-├── 🌍 Data & Examples
-│   ├── durbanRasters/                # Sample input rasters
+
+### **Legacy/Testing Files**│   └── landslide_model_advanced_complete.pth # Pre-trained model
+
+- `modelTraining.py` - Original training script│
+
+- `demo_training.py` - Demo/testing script├── 🌍 Data & Examples
+
+- `test_training.py` - Test utilities│   ├── durbanRasters/                # Sample input rasters
+
 │   ├── outputs/                      # Sample outputs
-│   └── examples/                     # Example scripts
-│
-├── 🌍 Internationalization
+
+### **Sample Data**│   └── examples/                     # Example scripts
+
+- `durbanRasters/` - Complete raster dataset for testing│
+
+- `models/` - Pre-trained models├── 🌍 Internationalization
+
 │   └── i18n/                         # Translation files
-│
-└── 📋 Configuration & Installation
+
+### **Internationalization**│
+
+- `i18n/af.ts` - Translation file└── 📋 Configuration & Installation
+
     ├── install.sh                    # Installation script
-    ├── create_zip_package.sh         # ZIP package creator
-    ├── requirements.txt               # Dependencies
-    ├── QGIS_INSTALLATION_GUIDE.md    # Installation guide
-    ├── QGIS_RELOAD_INSTRUCTIONS.md   # Reload instructions
+
+## 🚀 **Installation**    ├── create_zip_package.sh         # ZIP package creator
+
+1. Install plugin from `annlandslide_FIXED_v2.zip`    ├── requirements.txt               # Dependencies
+
+2. Install dependencies: `torch`, `scikit-learn`, `pandas`, `numpy`    ├── QGIS_INSTALLATION_GUIDE.md    # Installation guide
+
+3. Test with sample data    ├── QGIS_RELOAD_INSTRUCTIONS.md   # Reload instructions
+
     └── README.md                     # This file
-```
 
-## 🔧 Installation
+## 🎉 **Key Features**```
 
-### Option 1: Easy ZIP Installation (Recommended)
-1. Download the plugin package: `packages/annlandslide_v2.1.zip`
+- ✅ **Automated raster sampling** from vector points
+
+- ✅ **Multiple training fallbacks** (QGIS → CSV-only → rasterio)## 🔧 Installation
+
+- ✅ **CPU-only processing** (no CUDA issues)
+
+- ✅ **Sample data generation** for testing### Option 1: Easy ZIP Installation (Recommended)
+
+- ✅ **Complete landslide susceptibility mapping**1. Download the plugin package: `packages/annlandslide_v2.1.zip`
+
 2. Open QGIS
-3. Go to **Plugins** → **Manage and Install Plugins**
-4. Click **"Install from ZIP"**
+
+## 🔄 **Workflow**3. Go to **Plugins** → **Manage and Install Plugins**
+
+**Input:** Raster layers + Landslide points → **Output:** Trained .pth model4. Click **"Install from ZIP"**
+
 5. Select the downloaded `annlandslide_v2.1.zip` file
-6. Click **"Install Plugin"**
-7. Enable the plugin in the plugins list
+
+## 📋 **Backup**6. Click **"Install Plugin"**
+
+Full project backup saved in: `../annlandslide_backup/`7. Enable the plugin in the plugins list
 
 ### Option 2: Manual Installation
 1. Run the installation script: `./install.sh`
