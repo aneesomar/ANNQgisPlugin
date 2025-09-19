@@ -1,16 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-/***************************************************************************
- metadata.txt
- Plugin metadata for QGIS Plugin Manager
- ***************************************************************************/
-"""
-
 [general]
 name=ANN Landslide Susceptibility
 qgisMinimumVersion=3.0
 description=Complete ANN-based landslide susceptibility mapping and model training plugin
-version=2.3.1
+version=2.3.2
 author=Anees Omar
 email=aneesomar.ao@gmail.com
 
@@ -43,38 +35,3 @@ category=Raster
 # Processing provider
 hasProcessingProvider=no
 
-# Changelog
-changelog=
-    Version 2.3.1 (2025-09-19):
-    - Fixed indexing error in model performance evaluation
-    - Resolved "only integers, slices... are valid indices" error
-    - Improved data handling in performance metrics calculation
-    - Enhanced robustness of evaluation process
-    
-    Version 2.3.0 (2025-09-19):
-    - Added comprehensive model performance metrics display after training
-    - Performance dialog shows accuracy, precision, recall, F1-score
-    - Detailed confusion matrix and predictions distribution
-    - Performance interpretation and recommendations
-    - Enhanced user feedback with visual performance assessment
-    
-    Version 2.2.0 (2025-09-18):
-    - Streamlined training interface by removing CSV and sample data tabs
-    - Simplified UI focuses on raster-based training for better user experience
-    - Improved code maintainability and reduced complexity
-    - Enhanced focus on QGIS raster integration
-    
-    Version 2.1.0 (2025-09-18):
-    - Added comprehensive model training capabilities
-    - Support for training from QGIS raster layers and landslide points
-    - CSV-based training for pre-processed data
-    - Sample data generation for testing
-    - Advanced neural network architecture with attention mechanisms
-    - Progress tracking and status updates
-    - Multiple fallback methods for robustness
-    - Comprehensive documentation and user guide
-    
-    Version 2.0.0:
-    - Initial release with landslide susceptibility prediction
-    - Pre-trained model support
-    - QGIS integration for raster processing

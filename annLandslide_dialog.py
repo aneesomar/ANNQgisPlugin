@@ -28,14 +28,7 @@ class AnnLandslideDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # Show simple information about the plugin
         QMessageBox.information(
-            self,
-            "ANN Landslide Plugin - SIMPLE VERSION v2.0",
-            f"✅ SIMPLE SINGLE-PROCESSOR VERSION LOADED\n\n"
-            f"This version provides:\n"
-            f"• Single-threaded processing (no system overload)\n"
-            f"• Proper progress tracking (0-100%)\n"
-            f"• Lower memory usage\n"
-            f"• Maximum stability\n\n"
+            self, "ANN Landslide Susceptibility",
             f"This plugin requires machine learning libraries.\n"
             f"If you encounter issues, install dependencies:\n"
             f"pip install torch scikit-learn pandas numpy rasterio"
