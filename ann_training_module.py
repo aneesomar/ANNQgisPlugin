@@ -510,3 +510,81 @@ class ANNTrainingModule:
         }, output_path)
         
         print(f"Model saved to: {output_path}")
+        
+    def evaluate_model_performance(self, model, feature_data, scaler, selected_features):
+        """
+        Evaluate model performance on test set
+        
+        Args:
+            model: Trained PyTorch model
+            feature_data: Original DataFrame with extracted features
+            scaler: Fitted scaler
+            selected_features: List of selected feature names
+            
+        Returns:
+            Dictionary containing performance metrics
+        """
+        from sklearn.model_selection import train_test_split
+        from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report, confusion_matrix
+        import torch
+        import numpy as np
+        import pandas as pd
+        
+        # Recreate the same data processing as in prepare_training_data
+        X = feature_data.drop(['x', 'y', 'label'], axis=1, errors='ignore')
+        y = feature_data['label']
+        
+        # Convert to numeric and handle missing values
+        X = X.apply(pd.to_numeric, errors='coerce')
+        X = X.fillna(0)
+        
+        # Select features (use column names for DataFrame indexing)
+        X_selected = X[selected_features]
+        
+        # Split data the same way as training (same random state)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X_selected, y, test_size=0.2, random_state=42, stratify=y
+        )
+        
+        # Scale test data
+        X_test_scaled = scaler.transform(X_test)
+        
+        # Convert to tensors
+        X_test_tensor = torch.FloatTensor(X_test_scaled).to(self.device)
+        
+        # Evaluate model
+        model.eval()
+        with torch.no_grad():
+            test_outputs = model(X_test_tensor)
+            test_probs = torch.sigmoid(test_outputs).cpu().numpy().flatten()
+            test_predictions = (test_probs > 0.5).astype(int)
+            
+        # Calculate metrics
+        accuracy = accuracy_score(y_test, test_predictions)
+        precision = precision_score(y_test, test_predictions)
+        recall = recall_score(y_test, test_predictions)
+        f1 = f1_score(y_test, test_predictions)
+        
+        # Confusion matrix
+        cm = confusion_matrix(y_test, test_predictions)
+        
+        # Classification report
+        class_report = classification_report(y_test, test_predictions, target_names=['Non-Landslide', 'Landslide'])
+        
+        performance_metrics = {
+            'accuracy': float(accuracy),
+            'precision': float(precision),
+            'recall': float(recall),
+            'f1_score': float(f1),
+            'confusion_matrix': cm.tolist(),
+            'classification_report': class_report,
+            'test_size': len(y_test),
+            'predictions_distribution': {
+                'predicted_landslides': int(np.sum(test_predictions)),
+                'predicted_non_landslides': int(len(test_predictions) - np.sum(test_predictions)),
+                'actual_landslides': int(np.sum(y_test)),
+                'actual_non_landslides': int(len(y_test) - np.sum(y_test))
+            }
+        }
+        
+        return performance_metrics

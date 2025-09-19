@@ -24,6 +24,7 @@ class ComprehensiveTrainingWorker(QThread):
     progress = pyqtSignal(int)
     status = pyqtSignal(str)
     finished = pyqtSignal(bool, str)
+    performance_ready = pyqtSignal(dict)  # New signal for performance metrics
     
     def __init__(self, training_method, **kwargs):
         super().__init__()
@@ -87,6 +88,12 @@ class ComprehensiveTrainingWorker(QThread):
             )
             
             self.progress.emit(90)
+            self.status.emit("Evaluating model performance...")
+            
+            # Evaluate model on test set using original feature data
+            performance_metrics = trainer.evaluate_model_performance(model, feature_data, scaler, selected_features)
+            
+            self.progress.emit(95)
             self.status.emit("Saving model...")
             
             trainer.save_model(
@@ -95,6 +102,9 @@ class ComprehensiveTrainingWorker(QThread):
             )
             
             self.progress.emit(100)
+            
+            # Emit performance metrics before finishing
+            self.performance_ready.emit(performance_metrics)
             self.finished.emit(True, f"Advanced model training completed! Saved to: {self.kwargs['output_path']}")
             
         except Exception as e:
@@ -286,6 +296,7 @@ class ComprehensiveTrainingDialog(QtWidgets.QDialog, FORM_CLASS):
         self.worker.progress.connect(self.progressBar_training.setValue)
         self.worker.status.connect(self.label_status.setText)
         self.worker.finished.connect(self.training_finished)
+        self.worker.performance_ready.connect(self.show_performance_metrics)
         self.worker.start()
         
     def training_finished(self, success, message):
@@ -294,13 +305,199 @@ class ComprehensiveTrainingDialog(QtWidgets.QDialog, FORM_CLASS):
         self.pushButton_start_training.setEnabled(True)
         self.pushButton_start_training.setText("Start Training")
         
-        # Show result
-        if success:
-            QMessageBox.information(self, "Training Complete", message)
-        else:
+        # Store the completion message for later
+        self.completion_message = message
+        self.training_success = success
+        
+        # If training failed, show error immediately
+        if not success:
             QMessageBox.critical(self, "Training Failed", message)
+            
+        # Performance metrics dialog will be shown by show_performance_metrics
+        # and then the completion message will be shown
             
         # Clean up
         if self.worker:
             self.worker.deleteLater()
             self.worker = None
+            
+    def show_performance_metrics(self, metrics):
+        """Display model performance metrics in a dialog"""
+        dialog = PerformanceDialog(metrics, self)
+        dialog.exec_()
+        
+        # After performance dialog is closed, show completion message
+        if hasattr(self, 'training_success') and self.training_success:
+            QMessageBox.information(self, "Training Complete", self.completion_message)
+
+
+class PerformanceDialog(QtWidgets.QDialog):
+    """Dialog to display model performance metrics"""
+    
+    def __init__(self, metrics, parent=None):
+        super().__init__(parent)
+        self.metrics = metrics
+        self.setup_ui()
+        
+    def setup_ui(self):
+        """Setup the performance display UI"""
+        self.setWindowTitle("Model Performance Metrics")
+        self.setModal(True)
+        self.resize(600, 500)
+        
+        layout = QVBoxLayout(self)
+        
+        # Title
+        title = QLabel("🎯 Model Training Performance Results")
+        title.setStyleSheet("font-size: 16px; font-weight: bold; color: #2E8B57; margin: 10px;")
+        layout.addWidget(title)
+        
+        # Scroll area for content
+        scroll = QtWidgets.QScrollArea()
+        scroll.setWidgetResizable(True)
+        content_widget = QtWidgets.QWidget()
+        content_layout = QVBoxLayout(content_widget)
+        
+        # Overall metrics section
+        metrics_group = QtWidgets.QGroupBox("📊 Overall Performance Metrics")
+        metrics_layout = QVBoxLayout(metrics_group)
+        
+        # Create metrics display
+        accuracy = self.metrics.get('accuracy', 0) * 100
+        precision = self.metrics.get('precision', 0) * 100
+        recall = self.metrics.get('recall', 0) * 100
+        f1_score = self.metrics.get('f1_score', 0) * 100
+        
+        metrics_text = f"""
+<div style="font-family: monospace; line-height: 1.6;">
+<b>🎯 Accuracy:</b> <span style="color: #2E8B57; font-size: 14px;"><b>{accuracy:.2f}%</b></span><br>
+<b>🎯 Precision:</b> <span style="color: #4169E1; font-size: 14px;"><b>{precision:.2f}%</b></span><br>
+<b>🎯 Recall:</b> <span style="color: #FF6347; font-size: 14px;"><b>{recall:.2f}%</b></span><br>
+<b>🎯 F1-Score:</b> <span style="color: #9932CC; font-size: 14px;"><b>{f1_score:.2f}%</b></span><br>
+</div>
+        """
+        
+        metrics_label = QLabel(metrics_text)
+        metrics_label.setWordWrap(True)
+        metrics_layout.addWidget(metrics_label)
+        content_layout.addWidget(metrics_group)
+        
+        # Predictions distribution
+        pred_group = QtWidgets.QGroupBox("📈 Predictions Distribution")
+        pred_layout = QVBoxLayout(pred_group)
+        
+        pred_dist = self.metrics.get('predictions_distribution', {})
+        pred_text = f"""
+<div style="font-family: monospace; line-height: 1.6;">
+<b>Test Set Size:</b> {self.metrics.get('test_size', 0)} samples<br><br>
+<b>Predicted Results:</b><br>
+• Landslides: {pred_dist.get('predicted_landslides', 0)}<br>
+• Non-landslides: {pred_dist.get('predicted_non_landslides', 0)}<br><br>
+<b>Actual Ground Truth:</b><br>
+• Landslides: {pred_dist.get('actual_landslides', 0)}<br>
+• Non-landslides: {pred_dist.get('actual_non_landslides', 0)}<br>
+</div>
+        """
+        
+        pred_label = QLabel(pred_text)
+        pred_label.setWordWrap(True)
+        pred_layout.addWidget(pred_label)
+        content_layout.addWidget(pred_group)
+        
+        # Confusion matrix
+        cm_group = QtWidgets.QGroupBox("🔍 Confusion Matrix")
+        cm_layout = QVBoxLayout(cm_group)
+        
+        cm = self.metrics.get('confusion_matrix', [[0, 0], [0, 0]])
+        cm_text = f"""
+<div style="font-family: monospace; line-height: 1.8;">
+<table border="1" cellpadding="8" style="border-collapse: collapse; width: 100%;">
+<tr style="background-color: #f0f0f0;">
+    <th></th><th>Predicted Non-Landslide</th><th>Predicted Landslide</th>
+</tr>
+<tr>
+    <td style="background-color: #f0f0f0;"><b>Actual Non-Landslide</b></td>
+    <td style="text-align: center; color: green;"><b>{cm[0][0]}</b></td>
+    <td style="text-align: center; color: red;"><b>{cm[0][1]}</b></td>
+</tr>
+<tr>
+    <td style="background-color: #f0f0f0;"><b>Actual Landslide</b></td>
+    <td style="text-align: center; color: red;"><b>{cm[1][0]}</b></td>
+    <td style="text-align: center; color: green;"><b>{cm[1][1]}</b></td>
+</tr>
+</table>
+</div>
+        """
+        
+        cm_label = QLabel(cm_text)
+        cm_label.setWordWrap(True)
+        cm_layout.addWidget(cm_label)
+        content_layout.addWidget(cm_group)
+        
+        # Interpretation section
+        interp_group = QtWidgets.QGroupBox("💡 Performance Interpretation")
+        interp_layout = QVBoxLayout(interp_group)
+        
+        # Generate interpretation
+        interpretation = self.get_performance_interpretation()
+        interp_label = QLabel(interpretation)
+        interp_label.setWordWrap(True)
+        interp_layout.addWidget(interp_label)
+        content_layout.addWidget(interp_group)
+        
+        scroll.setWidget(content_widget)
+        layout.addWidget(scroll)
+        
+        # Close button
+        button_layout = QHBoxLayout()
+        button_layout.addStretch()
+        close_btn = QtWidgets.QPushButton("Close")
+        close_btn.clicked.connect(self.close)
+        close_btn.setStyleSheet("font-weight: bold; padding: 8px 16px;")
+        button_layout.addWidget(close_btn)
+        layout.addLayout(button_layout)
+        
+    def get_performance_interpretation(self):
+        """Generate interpretation of the performance metrics"""
+        accuracy = self.metrics.get('accuracy', 0) * 100
+        precision = self.metrics.get('precision', 0) * 100
+        recall = self.metrics.get('recall', 0) * 100
+        f1_score = self.metrics.get('f1_score', 0) * 100
+        
+        interpretation = "<div style='line-height: 1.6;'>"
+        
+        # Overall assessment
+        if accuracy >= 90:
+            interpretation += "🟢 <b>Excellent Performance:</b> Your model shows exceptional accuracy.<br>"
+        elif accuracy >= 80:
+            interpretation += "🟡 <b>Good Performance:</b> Your model performs well with room for improvement.<br>"
+        elif accuracy >= 70:
+            interpretation += "🟠 <b>Moderate Performance:</b> Consider collecting more data or feature engineering.<br>"
+        else:
+            interpretation += "🔴 <b>Poor Performance:</b> Model needs significant improvement.<br>"
+            
+        interpretation += "<br>"
+        
+        # Precision interpretation
+        if precision >= 85:
+            interpretation += "✅ <b>High Precision:</b> Low false positive rate - reliable landslide predictions.<br>"
+        else:
+            interpretation += "⚠️ <b>Lower Precision:</b> Some non-landslide areas may be incorrectly classified.<br>"
+            
+        # Recall interpretation  
+        if recall >= 85:
+            interpretation += "✅ <b>High Recall:</b> Good at detecting actual landslides.<br>"
+        else:
+            interpretation += "⚠️ <b>Lower Recall:</b> Some actual landslides may be missed.<br>"
+            
+        interpretation += "<br><b>Recommendations:</b><br>"
+        if accuracy < 80:
+            interpretation += "• Consider adding more training data<br>"
+            interpretation += "• Review and add more relevant raster layers<br>"
+            interpretation += "• Check data quality and landslide point accuracy<br>"
+        else:
+            interpretation += "• Model is ready for practical use<br>"
+            interpretation += "• Consider validation with field data<br>"
+            
+        interpretation += "</div>"
+        return interpretation
