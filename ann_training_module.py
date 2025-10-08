@@ -220,8 +220,14 @@ class ANNTrainingModule:
                 sample_value = raster_layer.dataProvider().sample(point, 1)[0]
                 
                 # Handle NoData values
-                if sample_value is None or sample_value == raster_layer.dataProvider().sourceNoDataValue(1):
-                    sample_value = 0
+                nodata_value = raster_layer.dataProvider().sourceNoDataValue(1)
+                if sample_value is None:
+                    sample_value = np.nan
+                elif nodata_value is not None and sample_value == nodata_value:
+                    sample_value = np.nan
+                # Filter out extreme values that are likely nodata
+                elif abs(sample_value) > 1e10:
+                    sample_value = np.nan
                     
                 features_data[j][raster_name] = sample_value
                 
@@ -294,6 +300,22 @@ class ANNTrainingModule:
         
         # Convert to numeric and handle missing values
         X = X.apply(pd.to_numeric, errors='coerce')
+        
+        # Replace inf values with NaN
+        X = X.replace([np.inf, -np.inf], np.nan)
+        
+        # Remove rows with too many NaN values (more than 50% of features)
+        nan_threshold = 0.5 * X.shape[1]
+        valid_rows = X.isna().sum(axis=1) < nan_threshold
+        X = X[valid_rows]
+        y = y[valid_rows]
+        
+        print(f"Removed {(~valid_rows).sum()} rows with too many missing values")
+        
+        # Fill remaining NaN values with column median
+        X = X.fillna(X.median())
+        
+        # If still NaN (all values were NaN in a column), fill with 0
         X = X.fillna(0)
         
         # Feature selection using ensemble method

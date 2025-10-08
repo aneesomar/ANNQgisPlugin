@@ -2,11 +2,11 @@
 name=ANN Landslide Susceptibility
 qgisMinimumVersion=3.0
 description=Complete ANN-based landslide susceptibility mapping and model training plugin
-version=2.3.2
+version=2.3.3
 author=Anees Omar
 email=aneesomar.ao@gmail.com
 
-about=This plugin provides comprehensive landslide susceptibility mapping using Artificial Neural Networks (ANN). Features include: (1) Landslide susceptibility prediction using pre-trained or custom models, (2) Train new ANN models directly from QGIS raster layers and landslide points, (3) Streamlined raster-based training with advanced neural network architecture, (4) Feature selection and attention mechanisms for improved accuracy, (5) Comprehensive model performance evaluation with detailed metrics display, (6) Progress tracking and comprehensive error handling, (7) Seamless QGIS integration for practical workflows. The plugin provides both research-grade model training with performance analysis and practical susceptibility mapping capabilities.
+about=This plugin provides comprehensive landslide susceptibility mapping using Artificial Neural Networks (ANN). Features include: (1) Landslide susceptibility prediction using pre-trained or custom models, (2) Train new ANN models directly from QGIS raster layers and landslide points, (3) Streamlined raster-based training with advanced neural network architecture, (4) Feature selection and attention mechanisms for improved accuracy, (5) Comprehensive model performance evaluation with detailed metrics display, (6) Progress tracking and comprehensive error handling, (7) Seamless QGIS integration for practical workflows, (8) Fixed noData value handling to prevent processing of invalid extreme values. The plugin provides both research-grade model training with performance analysis and practical susceptibility mapping capabilities.
 
 tracker=https://github.com/aneesomar/ANNQgisPlugin/issues
 repository=https://github.com/aneesomar/ANNQgisPlugin

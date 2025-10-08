@@ -102,10 +102,17 @@ class RasterDataExtractor:
                     values = list(sample_gen(src, all_coords))
                     
                     # Extract first band values and handle NoData
+                    nodata_val = src.nodata
                     raster_values = []
                     for val in values:
-                        if val[0] is None or np.isnan(val[0]) or val[0] == src.nodata:
-                            raster_values.append(0)
+                        # Check for various nodata representations
+                        if val[0] is None or np.isnan(val[0]):
+                            raster_values.append(np.nan)
+                        elif nodata_val is not None and val[0] == nodata_val:
+                            raster_values.append(np.nan)
+                        # Filter out extreme values that are likely nodata
+                        elif abs(val[0]) > 1e10:  # Very large positive or negative
+                            raster_values.append(np.nan)
                         else:
                             raster_values.append(val[0])
                             
@@ -123,8 +130,22 @@ class RasterDataExtractor:
                 
         if progress_callback:
             progress_callback(100)
-            
-        return pd.DataFrame(feature_data)
+        
+        # Convert to DataFrame and clean
+        df = pd.DataFrame(feature_data)
+        
+        # Replace inf with NaN
+        df = df.replace([np.inf, -np.inf], np.nan)
+        
+        # Remove rows with too many NaN values (more than 50% of features)
+        feature_cols = [col for col in df.columns if col not in ['x', 'y', 'label']]
+        if feature_cols:
+            nan_threshold = 0.5 * len(feature_cols)
+            valid_rows = df[feature_cols].isna().sum(axis=1) < nan_threshold
+            df = df[valid_rows]
+            print(f"Removed {(~valid_rows).sum()} samples with too many missing values")
+        
+        return df
         
     def _generate_random_points(self, bounds: Tuple, existing_points: List[Tuple], 
                                num_points: int, min_distance: float = 100) -> List[Tuple]:

@@ -105,8 +105,14 @@ class LandslideSusceptibilityPredictor:
                 
                 # Convert to float32 and handle nodata
                 data = data.astype(np.float32)
+                
+                # Handle standard nodata values
                 if src.nodata is not None:
                     data[data == src.nodata] = np.nan
+                
+                # Filter out extreme values that are likely nodata representations
+                # Common nodata values: -9999, -3.4e38, 1.7e308, etc.
+                data[np.abs(data) > 1e10] = np.nan
                 
                 return data
                 
