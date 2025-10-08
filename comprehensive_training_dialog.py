@@ -47,10 +47,11 @@ class ComprehensiveTrainingWorker(QThread):
 
     def _train_from_rasters(self):
         """Train model from raster data extraction"""
-        # Try QGIS-based approach first, fall back to simple approach
+        # Use improved training module with spatial CV
         try:
-            from .ann_training_module import ANNTrainingModule
-            trainer = ANNTrainingModule()
+            from .ann_training_module_improved import ANNTrainingModuleImproved
+            import torch
+            trainer = ANNTrainingModuleImproved()
             
             # Extract features
             self.status.emit("Extracting features from rasters using QGIS...")
@@ -66,11 +67,14 @@ class ComprehensiveTrainingWorker(QThread):
             )
             
             self.progress.emit(40)
-            self.status.emit("Preparing training data...")
+            self.status.emit("Preparing training data with spatial cross-validation...")
             
-            X, y, selected_features, scaler = trainer.prepare_training_data(
-                feature_data, 
-                test_split=self.kwargs.get('test_split', 0.2)
+            training_data = trainer.prepare_training_data_with_spatial_cv(
+                feature_data=feature_data,
+                test_split=self.kwargs.get('test_split', 0.2),
+                use_spatial_cv=True,  # Enable spatial CV
+                n_blocks=10,
+                buffer_distance=None  # Auto-calculate
             )
             
             self.progress.emit(50)
@@ -80,36 +84,68 @@ class ComprehensiveTrainingWorker(QThread):
                 self.progress.emit(progress)
                 self.status.emit(f"Training epoch {epoch}/{total_epochs}")
                 
-            model, training_info = trainer.train_model(
-                X, y,
-                epochs=self.kwargs.get('epochs', 150),
+            result = trainer.train_model(
+                training_data=training_data,
+                num_epochs=self.kwargs.get('epochs', 150),
                 batch_size=self.kwargs.get('batch_size', 64),
+                learning_rate=0.001,
+                patience=15,
                 progress_callback=training_progress
             )
             
             self.progress.emit(90)
             self.status.emit("Evaluating model performance...")
             
-            # Evaluate model on test set using original feature data
-            performance_metrics = trainer.evaluate_model_performance(model, feature_data, scaler, selected_features)
+            # Extract performance metrics from training result
+            performance_metrics = {
+                'accuracy': result['metrics'].get('accuracy', 0),
+                'precision': result['metrics'].get('precision', 0),
+                'recall': result['metrics'].get('recall', 0),
+                'f1_score': result['metrics'].get('f1', 0),
+                'auc_roc': result['metrics'].get('auc_roc', 0),
+                'best_threshold': result['best_threshold']
+            }
             
             self.progress.emit(95)
             self.status.emit("Saving model...")
             
-            trainer.save_model(
-                model, scaler, selected_features, training_info,
-                self.kwargs['output_path']
-            )
+            # Prepare training info for saving
+            training_info = {
+                'train_losses': result.get('train_losses', []),
+                'val_losses': result.get('val_losses', []),
+                'best_f1': result['metrics'].get('f1', 0),
+                'accuracy': result['metrics'].get('accuracy', 0),
+                'precision': result['metrics'].get('precision', 0),
+                'recall': result['metrics'].get('recall', 0),
+                'auc_roc': result['metrics'].get('auc_roc', 0),
+                'train_size': result.get('train_size', 0),
+                'train_landslides': result.get('train_landslides', 0),
+                'train_non_landslides': result.get('train_non_landslides', 0),
+                'test_size': result['metrics'].get('test_size', 0),
+                'test_landslides': result['metrics'].get('test_landslides', 0),
+                'test_non_landslides': result['metrics'].get('test_non_landslides', 0)
+            }
+            
+            torch.save({
+                'model_state_dict': result['model'].state_dict(),
+                'scaler': result['scaler'],
+                'selected_features': result['selected_features'],
+                'best_threshold': result['best_threshold'],
+                'input_size': len(result['selected_features']),
+                'training_info': training_info
+            }, self.kwargs['output_path'])
             
             self.progress.emit(100)
             
             # Emit performance metrics before finishing
             self.performance_ready.emit(performance_metrics)
-            self.finished.emit(True, f"Advanced model training completed! Saved to: {self.kwargs['output_path']}")
+            self.finished.emit(True, f"Advanced model training completed with spatial CV! Saved to: {self.kwargs['output_path']}")
             
         except Exception as e:
             # If raster processing fails, report the error
-            self.finished.emit(False, f"Raster training failed: {str(e)}")
+            import traceback
+            error_detail = traceback.format_exc()
+            self.finished.emit(False, f"Raster training failed: {str(e)}\n\nDetails:\n{error_detail}")
 
 
 class ComprehensiveTrainingDialog(QtWidgets.QDialog, FORM_CLASS):

@@ -285,6 +285,7 @@ class ANNTrainingModule:
     def prepare_training_data(self, feature_data, test_split=0.2):
         """
         Prepare data for training with feature selection and scaling
+        Handles one-hot encoding for Lithology and Soil categorical features
         
         Args:
             feature_data: DataFrame with extracted features
@@ -312,11 +313,44 @@ class ANNTrainingModule:
         
         print(f"Removed {(~valid_rows).sum()} rows with too many missing values")
         
-        # Fill remaining NaN values with column median
-        X = X.fillna(X.median())
+        # Identify categorical features (Lithology and Soil) for one-hot encoding
+        categorical_features = []
+        if 'Lithology' in X.columns:
+            categorical_features.append('Lithology')
+        if 'Soil' in X.columns:
+            categorical_features.append('Soil')
         
-        # If still NaN (all values were NaN in a column), fill with 0
-        X = X.fillna(0)
+        # Separate continuous and categorical features
+        continuous_cols = [col for col in X.columns if col not in categorical_features]
+        continuous_data = X[continuous_cols]
+        
+        # Fill NaN in continuous features with column median
+        continuous_data = continuous_data.fillna(continuous_data.median())
+        continuous_data = continuous_data.fillna(0)  # If still NaN, fill with 0
+        
+        # One-hot encode categorical features
+        encoded_dfs = [continuous_data]
+        
+        if 'Lithology' in categorical_features:
+            print("One-hot encoding Lithology feature...")
+            # Get unique lithology values (excluding NaN)
+            lithology_values = X['Lithology'].dropna().unique()
+            lithology_dummies = pd.get_dummies(X['Lithology'], prefix='lithology', dummy_na=False)
+            encoded_dfs.append(lithology_dummies)
+            print(f"   Created {len(lithology_dummies.columns)} lithology categories")
+        
+        if 'Soil' in categorical_features:
+            print("One-hot encoding Soil feature...")
+            # Get unique soil values (excluding NaN)
+            soil_values = X['Soil'].dropna().unique()
+            soil_dummies = pd.get_dummies(X['Soil'], prefix='soil', dummy_na=False)
+            encoded_dfs.append(soil_dummies)
+            print(f"   Created {len(soil_dummies.columns)} soil categories")
+        
+        # Combine all features
+        X = pd.concat(encoded_dfs, axis=1)
+        
+        print(f"Total features after encoding: {X.shape[1]}")
         
         # Feature selection using ensemble method
         selected_features = self._select_features(X, y)

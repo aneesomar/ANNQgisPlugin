@@ -192,9 +192,9 @@ class AnnLandslideDialog(QtWidgets.QDialog, FORM_CLASS):
                 )
                 return
             
-            # Import the simple safe predictor
+            # Import the improved predictor with edge correction
             try:
-                from .landslide_model_simple_safe import LandslideSusceptibilityPredictor
+                from .landslide_model_improved import LandslideModelImproved
             except Exception as e:
                 QMessageBox.critical(
                     self,
@@ -222,7 +222,7 @@ class AnnLandslideDialog(QtWidgets.QDialog, FORM_CLASS):
             from qgis.PyQt.QtWidgets import QProgressDialog
             from qgis.PyQt.QtCore import Qt
             from qgis.core import QgsProject, QgsRasterLayer
-            from .landslide_model_simple_safe import LandslideSusceptibilityPredictor
+            from .landslide_model_improved import LandslideModelImproved
             
             # Get inputs
             model_path = self.lineEdit_model.text().strip()
@@ -253,27 +253,22 @@ class AnnLandslideDialog(QtWidgets.QDialog, FORM_CLASS):
             progress.setWindowModality(Qt.WindowModal)
             progress.show()
             
-            # Initialize predictor
-            predictor = LandslideSusceptibilityPredictor()
+            # Initialize improved predictor
+            predictor = LandslideModelImproved()
             
-            # Load model
+            # Load model with metadata
             progress.setLabelText("Loading trained model...")
             progress.setValue(10)
             QtWidgets.QApplication.processEvents()
             
             predictor.load_model(model_path)
-            predictor.threshold = threshold
             
-            # Setup scaler
-            progress.setLabelText("Setting up data scaler...")
+            # Override threshold if different from model's optimal threshold
+            if threshold != 0.5:  # User changed threshold
+                predictor.threshold = threshold
+            
+            progress.setLabelText("Processing rasters with edge correction...")
             progress.setValue(20)
-            QtWidgets.QApplication.processEvents()
-            
-            predictor.setup_scaler()
-            
-            # Process rasters
-            progress.setLabelText("Processing rasters...")
-            progress.setValue(30)
             QtWidgets.QApplication.processEvents()
             
             if progress.wasCanceled():
@@ -284,14 +279,14 @@ class AnnLandslideDialog(QtWidgets.QDialog, FORM_CLASS):
                 if progress.wasCanceled():
                     raise Exception("Processing cancelled by user")
                 
-                # Map the progress from 30-95%
-                mapped_progress = 30 + int((percent / 100.0) * 65)
+                # Map the progress from 20-95%
+                mapped_progress = 20 + int((percent / 100.0) * 75)
                 progress.setValue(mapped_progress)
                 progress.setLabelText(message)
                 QtWidgets.QApplication.processEvents()
             
-            # Process with simple method (confirmed single-threaded)
-            predictor.process_rasters_simple(raster_paths, output_path, progress_callback)
+            # Process with improved method (includes edge correction and memory management)
+            predictor.process_rasters(raster_paths, output_path, progress_callback)
             
             # Finalize
             progress.setLabelText("Finalizing output...")

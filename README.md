@@ -1,140 +1,365 @@
-# ANN Landslide Susceptibility QGIS Plugin# ANN Landslide Susceptibility QGIS Plugin
+# ANN Landslide Susceptibility Plugin# ANN Landslide Susceptibility QGIS Plugin
 
 
 
-## 🎯 **Working Plugin Package**A robust QGIS plugin for landslide susceptibility prediction using Artificial Neural Networks (ANN).
+QGIS plugin for landslide susceptibility mapping using Artificial Neural Networks.> **v2.8.0 Update**: New simplified training module for better, gradual predictions! 🎉
 
-**Install this:** `annlandslide_FIXED_v2.zip` - The fully tested and working version
 
-## 🚀 Features
 
-## 📂 **Project Structure**
+## Current Version: v2.9.3A robust QGIS plugin for landslide susceptibility prediction using Artificial Neural Networks (ANN).
 
-- **Safe & Stable**: Single-threaded processing with comprehensive error handling
 
-### **Core Plugin Files**- **Progress Tracking**: Real-time progress updates with clear status messages
 
-- `annLandslide.py` - Main plugin class- **Memory Efficient**: Adaptive chunk-based processing
+**Status**: ✅ Production Ready## 🚀 Quick Start
 
-- `annLandslide_dialog.py` - Main dialog interface- **Error Recovery**: Graceful handling of missing or corrupted data
 
-- `comprehensive_training_dialog.py` - Training interface- **Standard Output**: GeoTIFF format with proper georeferencing
 
-- `__init__.py` - Plugin initialization
+## Core Files### ⚡ **Recommended: Use the Simplified Training Module**
 
-- `metadata.txt` - Plugin metadata## 📁 Project Structure
 
-- `icon.png` - Plugin icon
+
+### Plugin ComponentsThe new v2.8.0 includes a simplified training approach that produces **gradual, realistic predictions** instead of binary clusters:
+
+- `annLandslide.py` - Main plugin controller
+
+- `annLandslide_dialog.py` - Prediction dialog```bash
+
+- `annLandslide_dialog_base.ui` - Prediction UI# Train a model
+
+- `comprehensive_training_dialog.py` - Training dialogpython3 ann_training_module_simple.py
+
+- `model_training_dialog_base.ui` - Training UI
+
+- `ann_training_module_improved.py` - Training engine (with auto-balancing)# Test predictions (fast ~10 seconds)
+
+- `landslide_model_improved.py` - Prediction enginepython3 quick_test_simple.py
+
+- `metadata.txt` - Plugin metadata
+
+- `icon.png` - Plugin icon# Make full predictions
+
+- `__init__.py` - Plugin initializerpython3 -c "
+
+- `i18n/` - Translationsfrom landslide_model_simple import LandslideModelSimple
+
+model = LandslideModelSimple('landslide_model_simple.pth')
+
+### Utilitiesmodel.predict(raster_paths=['slope.tif', ...], output_path='susceptibility.tif')
+
+- `diagnose_model.py` - Analyzes trained models"
+
+- `simple_fast_test.py` - Quick validation tool (1 minute)```
+
+- `ultra_fast_test.py` - Ultra-fast sampling tests (2-10 seconds)
+
+- `validate_model.py` - Comprehensive ML metrics**Why simplified?** The previous complex model (v2.7.0) was overfitting, producing binary predictions (0 or 1). The simplified model generalizes better and produces natural gradual probabilities.
+
+- `raster_data_extractor.py` - Raster processing helper
+
+📖 **Read More**: 
+
+## Installation- [VERSION_2.8.0_SUMMARY.md](VERSION_2.8.0_SUMMARY.md) - Complete overview
+
+- [SIMPLIFIED_TRAINING_GUIDE.md](SIMPLIFIED_TRAINING_GUIDE.md) - Usage guide
+
+### For QGIS Users- [ARCHITECTURE_COMPARISON.md](ARCHITECTURE_COMPARISON.md) - Technical details
+
+1. Install from ZIP: `releases/ANNLandslidePlugin_v2.9.3.zip`
+
+2. QGIS → Plugins → Install from ZIP---
+
+3. Enable plugin
+
+## 🎯 Features
+
+### For Developers
+
+```bash- **Simplified Architecture**: Better generalization, no overfitting
+
+# Link to QGIS plugins folder- **Gradual Predictions**: Natural probability distributions (not binary!)
+
+ln -s /home/anees/Projects/annlandslide_train ~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/ANNLandslidePlugin- **Spatial Cross-Validation**: K-means blocking with 5% buffer zones
+
+```- **Ensemble Feature Selection**: SelectKBest + Random Forest + RFE voting
+
+- **Smart Categorical Handling**: One-hot encoding for lithology and soil
+
+## Key Features (v2.9.3)- **Memory Efficient**: Chunk-based processing (150k pixels per chunk)
+
+- **Fast**: 3-5 minutes for full prediction on typical datasets
+
+### Training- **No Calibration Needed**: Model produces good distributions naturally
+
+- ✅ Automatic test set balancing (fixes spatial clustering issues)
+
+- ✅ Class weighting (handles imbalanced datasets)---
+
+- ✅ Simplified 4-layer architecture (prevents overfitting)
+
+- ✅ Dropout 0.6 + learning rate 0.0001## 📁 Project Structure
+
+- ✅ Early stopping (prevents overfitting)
+
+- ✅ One-hot encoding for categorical features### **Training Modules (Use These!)**
+
+- ✅ Spatial cross-validation
+
+- **`ann_training_module_simple.py`** ⭐ - **RECOMMENDED**: Simplified training (v2.8.0)
+
+### Prediction  - 4-layer architecture (256 → 128 → 64 → 1)
+
+- ✅ Fast prediction (274k pixels/second)  - Higher dropout (0.5) for better generalization
+
+- ✅ Gradual susceptibility maps (Std 0.15-0.30)  - Label smoothing (0.1) prevents overconfidence
+
+- ✅ Handles categorical features automatically  - Produces gradual predictions ✅
+
+- ✅ Edge correction for boundary artifacts
+
+- **`landslide_model_simple.py`** ⭐ - **RECOMMENDED**: Prediction with simplified models
+
+### Validation Tools  - No calibration needed
+
+- `diagnose_model.py` - Check model weights, bias, training info  - Clean, fast predictions
+
+- `simple_fast_test.py` - Full validation in ~1 minute  - Matches training module
+
+- `ultra_fast_test.py` - Quick sampling for rapid testing
+
+- **`quick_test_simple.py`** - Quick testing (5k pixels, ~10 seconds)
+
+## Quick Start
+
+### **Legacy/Alternative Training Modules**
+
+### 1. Train Model
+
+```python- `ann_training_module_improved.py` - Complex model (v2.7.0, overfitting issue)
+
+# In QGIS Python Console- `landslide_model_improved.py` - Prediction with complex models
+
+from ANNLandslidePlugin import comprehensive_training_dialog- `ann_training_module.py` - Original advanced training
+
+# Use GUI to train from rasters or CSV- `simple_training_module.py` - Earlier simplified version
+
+```- `csv_only_training.py` - Minimal dependency training
+
+
+
+### 2. Validate Model### **Core Plugin Files**
+
+```bash
+
+python3 diagnose_model.py /path/to/model.pth- `annLandslide.py` - Main plugin class
+
+```- `annLandslide_dialog.py` - Main dialog interface
+
+- `comprehensive_training_dialog.py` - Training interface
+
+### 3. Run Prediction- `__init__.py` - Plugin initialization
+
+```python- `metadata.txt` - Plugin metadata (v2.8.0)
+
+# In QGIS- `icon.png` - Plugin icon
+
+# Plugins → ANN Landslide → Prediction
+
+# Load model, select rasters, run### **UI Files**
 
 ```
 
-### **UI Files**annlandslide/
+- `annLandslide_dialog_base.ui` - Main dialog UI
 
-- `annLandslide_dialog_base.ui` - Main dialog UI├── 📄 Core Plugin Files
+## Expected Results- `model_training_dialog_base.ui` - Training dialog UI
 
-- `model_training_dialog_base.ui` - Training dialog UI│   ├── __init__.py                    # Plugin initialization
+- `model_training_dialog.py` - Training dialog controller
 
-- `model_training_dialog.py` - Training dialog controller│   ├── annLandslide.py               # Main plugin class
+### Good Model (v2.9.3)
 
-│   ├── annLandslide_dialog.py        # User interface dialog
+- Std Dev: 0.15-0.30 ✅### **Utilities**
 
-### **Training Modules**│   ├── annLandslide_dialog_base.ui   # UI design file
+- Mean: 0.40-0.70 ✅
 
-- `ann_training_module.py` - Advanced QGIS-based training│   ├── landslide_model_simple_safe.py # Safe model implementation
+- Distribution: Mix of low/moderate/high ✅- `raster_data_extractor.py` - Raster processing utilities
 
-- `simple_training_module.py` - Simplified training│   ├── metadata.txt                  # Plugin metadata
+- High-risk: 30-60% ✅- `check_model_scaler.py` - Diagnostic tool for model inspection
 
-- `csv_only_training.py` - Minimal dependency training (the one that works!)│   └── icon.png                      # Plugin icon
-
-- `raster_data_extractor.py` - Raster processing utilities│
+- Test set: Balanced (~25% landslides) ✅
 
 ├── 📦 Packages
 
-### **Prediction Module**│   └── annlandslide_v2.1.zip         # ⭐ Ready-to-install ZIP package
+### Bad Model (old versions)
 
-- `landslide_model_simple_safe.py` - Model prediction and mapping│
+- Std Dev: < 0.05 ❌ (binary predictions)### **Prediction Module**│   └── annlandslide_v2.1.zip         # ⭐ Ready-to-install ZIP package
 
-├── 🎯 Models
+- Mean: > 0.85 or < 0.15 ❌ (biased)
 
-### **Legacy/Testing Files**│   └── landslide_model_advanced_complete.pth # Pre-trained model
+- Distribution: >95% one category ❌- `landslide_model_simple_safe.py` - Model prediction and mapping│
 
-- `modelTraining.py` - Original training script│
+- High-risk: >95% ❌
 
-- `demo_training.py` - Demo/testing script├── 🌍 Data & Examples
+- Test set: Imbalanced (>60% landslides) ❌├── 🎯 Models
 
-- `test_training.py` - Test utilities│   ├── durbanRasters/                # Sample input rasters
 
-│   ├── outputs/                      # Sample outputs
 
-### **Sample Data**│   └── examples/                     # Example scripts
+## Architecture### **Legacy/Testing Files**│   └── landslide_model_advanced_complete.pth # Pre-trained model
 
-- `durbanRasters/` - Complete raster dataset for testing│
 
-- `models/` - Pre-trained models├── 🌍 Internationalization
 
-│   └── i18n/                         # Translation files
+### SimpleLandslideANN (4 layers)- `modelTraining.py` - Original training script│
 
-### **Internationalization**│
+```
 
-- `i18n/af.ts` - Translation file└── 📋 Configuration & Installation
+Input (n features) → 256 → 128 → 64 → Output (1)- `demo_training.py` - Demo/testing script├── 🌍 Data & Examples
+
+                    ↓     ↓     ↓
+
+                  ReLU  ReLU  ReLU- `test_training.py` - Test utilities│   ├── durbanRasters/                # Sample input rasters
+
+                    ↓     ↓     ↓
+
+               Dropout Dropout Dropout│   ├── outputs/                      # Sample outputs
+
+                 (0.6)  (0.6)  (0.6)
+
+```### **Sample Data**│   └── examples/                     # Example scripts
+
+
+
+**Why simplified?**- `durbanRasters/` - Complete raster dataset for testing│
+
+- Prevents overfitting on small datasets (5k-50k samples)
+
+- Produces gradual predictions (not binary)- `models/` - Pre-trained models├── 🌍 Internationalization
+
+- 3x faster than complex architectures
+
+- Better generalization│   └── i18n/                         # Translation files
+
+
+
+## Troubleshooting### **Internationalization**│
+
+
+
+### "Everything high susceptibility"- `i18n/af.ts` - Translation file└── 📋 Configuration & Installation
+
+→ Retrain with v2.9.3 (auto-balances test set)
 
     ├── install.sh                    # Installation script
 
-## 🚀 **Installation**    ├── create_zip_package.sh         # ZIP package creator
+### "Binary predictions (Std < 0.05)"
 
-1. Install plugin from `annlandslide_FIXED_v2.zip`    ├── requirements.txt               # Dependencies
+→ Check if using old model, retrain with v2.9.3## 🚀 **Installation**    ├── create_zip_package.sh         # ZIP package creator
+
+
+
+### "KeyError: pandas indexing"1. Install plugin from `annlandslide_FIXED_v2.zip`    ├── requirements.txt               # Dependencies
+
+→ Update to latest v2.9.3 (fixed in current release)
 
 2. Install dependencies: `torch`, `scikit-learn`, `pandas`, `numpy`    ├── QGIS_INSTALLATION_GUIDE.md    # Installation guide
 
-3. Test with sample data    ├── QGIS_RELOAD_INSTRUCTIONS.md   # Reload instructions
+### "Stripe through map"
 
-    └── README.md                     # This file
+→ Check raster NoData values, ensure all rasters cover same extent3. Test with sample data    ├── QGIS_RELOAD_INSTRUCTIONS.md   # Reload instructions
 
-## 🎉 **Key Features**```
 
-- ✅ **Automated raster sampling** from vector points
 
-- ✅ **Multiple training fallbacks** (QGIS → CSV-only → rasterio)## 🔧 Installation
+## Development    └── README.md                     # This file
 
-- ✅ **CPU-only processing** (no CUDA issues)
 
-- ✅ **Sample data generation** for testing### Option 1: Easy ZIP Installation (Recommended)
 
-- ✅ **Complete landslide susceptibility mapping**1. Download the plugin package: `packages/annlandslide_v2.1.zip`
+### Project Structure## 🎉 **Key Features**```
 
-2. Open QGIS
+```
+
+/home/anees/Projects/annlandslide_train/- ✅ **Automated raster sampling** from vector points
+
+├── Core plugin files (14 files)
+
+├── releases/ (ZIP packages for distribution)- ✅ **Multiple training fallbacks** (QGIS → CSV-only → rasterio)## 🔧 Installation
+
+├── models/ (trained .pth files)
+
+├── i18n/ (translations)- ✅ **CPU-only processing** (no CUDA issues)
+
+└── _archive_old_files/ (old versions, docs)
+
+```- ✅ **Sample data generation** for testing### Option 1: Easy ZIP Installation (Recommended)
+
+
+
+### Testing Workflow- ✅ **Complete landslide susceptibility mapping**1. Download the plugin package: `packages/annlandslide_v2.1.zip`
+
+```bash
+
+# 1. Diagnose model2. Open QGIS
+
+python3 diagnose_model.py model.pth
 
 ## 🔄 **Workflow**3. Go to **Plugins** → **Manage and Install Plugins**
 
-**Input:** Raster layers + Landslide points → **Output:** Trained .pth model4. Click **"Install from ZIP"**
+# 2. Quick test
 
-5. Select the downloaded `annlandslide_v2.1.zip` file
+python3 ultra_fast_test.py model.pth --mode quick**Input:** Raster layers + Landslide points → **Output:** Trained .pth model4. Click **"Install from ZIP"**
 
-## 📋 **Backup**6. Click **"Install Plugin"**
 
-Full project backup saved in: `../annlandslide_backup/`7. Enable the plugin in the plugins list
 
-### Option 2: Manual Installation
-1. Run the installation script: `./install.sh`
-2. Restart QGIS
-3. Enable the plugin in **Plugins** → **Manage and Install Plugins**
+# 3. Full validation5. Select the downloaded `annlandslide_v2.1.zip` file
 
-> **Note**: The installation script automatically copies all necessary files to your QGIS plugins directory.
+python3 simple_fast_test.py model.pth [rasters...]
 
-## 📊 Required Input Data
+```## 📋 **Backup**6. Click **"Install Plugin"**
 
-The plugin requires 14 raster layers in the following order:
 
-1. **Aspect** - Slope aspect (0-360°)
+
+## ReleasesFull project backup saved in: `../annlandslide_backup/`7. Enable the plugin in the plugins list
+
+
+
+Latest: **v2.9.3** (2025-10-08)### Option 2: Manual Installation
+
+- Auto-balances imbalanced test sets1. Run the installation script: `./install.sh`
+
+- Fixes spatial clustering issues2. Restart QGIS
+
+- Produces realistic gradual predictions3. Enable the plugin in **Plugins** → **Manage and Install Plugins**
+
+
+
+See `releases/` folder for all versions.> **Note**: The installation script automatically copies all necessary files to your QGIS plugins directory.
+
+
+
+## License## 📊 Required Input Data
+
+
+
+[Add your license here]The plugin requires 14 raster layers in the following order:
+
+
+
+## Author1. **Aspect** - Slope aspect (0-360°)
+
 2. **Elevation** - Digital elevation model
-3. **Flow Accumulation** - Water flow accumulation
+
+Anees Omar3. **Flow Accumulation** - Water flow accumulation
+
 4. **Plan Curvature** - Horizontal curvature
-5. **Profile Curvature** - Vertical curvature  
+
+## Support5. **Profile Curvature** - Vertical curvature  
+
 6. **Rivers Proximity** - Distance to rivers
-7. **Roads Proximity** - Distance to roads
-8. **Slope** - Slope gradient (0-90°)
-9. **Stream Power Index** - Erosive power of flowing water
-10. **Topographic Position Index** - Relative topographic position
+
+For issues or questions, check:7. **Roads Proximity** - Distance to roads
+
+1. `diagnose_model.py` output8. **Slope** - Slope gradient (0-90°)
+
+2. Training log for rebalancing messages9. **Stream Power Index** - Erosive power of flowing water
+
+3. `releases/ULTIMATE_FIX_v2.9.3.md` for detailed fix info10. **Topographic Position Index** - Relative topographic position
+
 11. **Terrain Ruggedness Index** - Surface roughness
 12. **Topographic Wetness Index** - Wetness accumulation
 13. **Lithology** - Rock/soil type (categorical)
