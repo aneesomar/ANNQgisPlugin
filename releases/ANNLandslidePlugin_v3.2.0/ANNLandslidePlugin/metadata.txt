@@ -1,0 +1,82 @@
+[general]
+name=ANN Landslide Susceptibility
+qgisMinimumVersion=3.0
+description=Complete ANN-based landslide susceptibility mapping and model training plugin with spatial cross-validation and advanced features
+version=3.2.0
+author=Anees Omar
+email=aneesomar.ao@gmail.com
+
+about=This plugin provides comprehensive landslide susceptibility mapping using Artificial Neural Networks (ANN). Major Features: (1) **Spatial Cross-Validation** - Prevents data leakage with K-means spatial blocking and buffer zones, (2) **Advanced Model Architecture** - Attention mechanisms, residual blocks, and skip connections, (3) **Ensemble Feature Selection** - Combines SelectKBest, Random Forest importance, and RFE with voting, (4) **Edge Artifact Correction** - Distance-based dampening for border pixels, (5) **Optimized Training** - FocalLoss for imbalanced data, mixed precision, gradient clipping, early stopping, (6) **Memory Management** - Chunk-based processing with garbage collection for large rasters, (7) **Threshold Optimization** - Automatically finds best classification threshold (0.3-0.8 range), (8) **One-hot Encoding** - Proper categorical feature handling for Lithology (10 categories) and Soil (5 categories), (9) **NoData Filtering** - Robust handling of invalid extreme values, (10) **RobustScaler** - Better handling of outliers in geospatial data. The plugin now replicates proven working methodologies with state-of-the-art spatial ML practices.
+
+tracker=https://github.com/aneesomar/ANNQgisPlugin/issues
+repository=https://github.com/aneesomar/ANNQgisPlugin
+homepage=https://github.com/aneesomar/ANNQgisPlugin
+
+# Tags are comma separated with spaces allowed
+tags=landslide, susceptibility, neural network, machine learning, geohazard, risk assessment, training, prediction, spatial cross-validation
+
+# Changelog
+changelog=
+    3.2.0 - MAJOR RELEASE - Complete Advanced Training Suite & Transfer Learning
+          - **COMPREHENSIVE TRAINING SUITE**: Complete advanced training system with all features
+            * Advanced model architecture with attention mechanisms and residual blocks
+            * Spatial cross-validation with K-means clustering and buffer zones
+            * Ensemble feature selection (SelectKBest + Random Forest + RFE voting)
+            * FocalLoss for imbalanced data handling
+            * Mixed precision training with gradient clipping
+            * Early stopping and learning rate scheduling
+            * Comprehensive validation with ROC curves and feature importance plots
+          - **TRANSFER LEARNING CAPABILITY**: Train on one area, predict on another
+            * Transfer learning module for adapting models to new geographic areas
+            * Comprehensive validation suite with spatial metrics
+            * Real-world testing with Durban data transfer learning
+          - **ADVANCED VALIDATION TOOLS**:
+            * Comprehensive test suite for model validation
+            * Model diagnosis tools for architecture analysis
+            * Prediction validation with real-world data
+            * Performance benchmarking utilities
+          - **IMPROVED PREPROCESSING**:
+            * Enhanced raster data extraction with robust error handling
+            * Better memory management for large datasets
+            * Improved categorical feature handling
+            * Advanced normalization techniques
+          - **PRODUCTION READY**: Thoroughly tested with real-world datasets and scenarios
+          - **BACKWARDS COMPATIBLE**: Works with existing trained models
+    2.9.3 - ULTIMATE FIX - Forces Balanced Test Set (Solves Spatial Clustering Issue)
+          - **CRITICAL FIX**: Automatically rebalances imbalanced test sets
+          - **PROBLEM SOLVED**: Spatial CV was creating 66% landslide test sets → metrics misled training
+          - **NEW FEATURE**: Auto-detects test set imbalance (>60% or <40%) and resamples to match training distribution
+          - **RESULT**: Test metrics now reflect true model performance, not dataset bias
+          - **WORKS WITH**: Both spatial CV and random splits - handles any imbalance automatically
+          - **MUST RETRAIN**: Old models (output5, output6) trained with imbalanced test sets
+    2.9.2 - CRITICAL FIX - Solves "Everything is High Susceptibility" Problem
+          - **PROBLEM SOLVED**: Model was predicting everything as high susceptibility
+          - **ROOT CAUSE**: Imbalanced test set (64.6% landslides) + no class weights + high learning rate
+          - **FIXES APPLIED**:
+            * Added class weights (BCEWithLogitsLoss with pos_weight) - balances training
+            * Reduced learning rate: 0.001 → 0.0001 - better convergence
+            * Increased dropout: 0.5 → 0.6 - stronger regularization
+            * Stratified train/test split - ensures balanced evaluation
+          - **NEW DIAGNOSTIC TOOL**: diagnose_model.py - Analyzes model weights, bias, and training info
+          - **RESULT**: Produces gradual, realistic predictions instead of "everything high-risk"
+          - **IMPORTANT**: Must retrain model with v2.9.2 to get improvements!
+
+# Plugin icon
+icon=icon.png
+
+# Experimental flag
+experimental=False
+
+# Deprecated flag (applies to the whole plugin, not just a single version)
+deprecated=False
+
+# Since QGIS 3.8, a comma separated list of plugins to be installed
+# (or upgraded) can be specified.
+# Check the documentation for more information.
+# plugin_dependencies=
+
+# Category of the plugin: Raster, Vector, Database or Web
+category=Raster
+
+# Processing provider
+hasProcessingProvider=no
