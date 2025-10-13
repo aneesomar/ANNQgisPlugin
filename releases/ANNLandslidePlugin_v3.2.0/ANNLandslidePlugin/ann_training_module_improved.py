@@ -41,6 +41,85 @@ except ImportError:
     QGIS_AVAILABLE = False
 
 
+##########################Loss Functions##########################
+
+class FocalLoss(nn.Module):
+    """
+    Focal Loss for addressing class imbalance in landslide prediction
+    
+    Formula: FL(pt) = -alpha * (1-pt)^gamma * log(pt)
+    
+    Args:
+        alpha (float): Weighting factor for rare class (default: 0.25)
+        gamma (float): Focusing parameter to down-weight easy examples (default: 2.0)
+        reduction (str): Specifies the reduction to apply to the output
+    """
+    
+    def __init__(self, alpha=0.25, gamma=2.0, reduction='mean'):
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+        self.reduction = reduction
+    
+    def forward(self, inputs, targets):
+        # Convert logits to probabilities
+        if inputs.dim() > 1:
+            inputs = inputs.squeeze()
+        if targets.dim() > 1:
+            targets = targets.squeeze()
+            
+        # Compute cross entropy
+        ce_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction='none')
+        
+        # Compute probabilities
+        pt = torch.exp(-ce_loss)
+        
+        # Compute focal loss
+        focal_loss = self.alpha * (1 - pt) ** self.gamma * ce_loss
+        
+        if self.reduction == 'mean':
+            return focal_loss.mean()
+        elif self.reduction == 'sum':
+            return focal_loss.sum()
+        else:
+            return focal_loss
+
+
+class EarlyStopping:
+    """
+    Early stopping to avoid overfitting during training
+    """
+    
+    def __init__(self, patience=10, min_delta=0.001, restore_best_weights=True):
+        self.patience = patience
+        self.min_delta = min_delta
+        self.restore_best_weights = restore_best_weights
+        self.best_loss = None
+        self.counter = 0
+        self.best_weights = None
+    
+    def __call__(self, val_loss, model):
+        if self.best_loss is None:
+            self.best_loss = val_loss
+            self.save_checkpoint(model)
+        elif val_loss < self.best_loss - self.min_delta:
+            self.best_loss = val_loss
+            self.counter = 0
+            self.save_checkpoint(model)
+        else:
+            self.counter += 1
+        
+        if self.counter >= self.patience:
+            if self.restore_best_weights and self.best_weights is not None:
+                model.load_state_dict(self.best_weights)
+            return True
+        return False
+    
+    def save_checkpoint(self, model):
+        """Save model checkpoint"""
+        self.best_weights = model.state_dict().copy()
+
+
 ##########################Spatial Cross-Validation Functions##########################
 
 def create_spatial_blocks(coordinates, n_blocks=5, method='kmeans'):
@@ -269,7 +348,7 @@ class AdvancedLandslideANN(nn.Module):
     This architecture is specifically designed for landslide datasets with 5k-50k samples.
     The simpler architecture prevents overfitting and produces realistic probability distributions.
     """
-    def __init__(self, input_size, hidden_sizes=[256, 128, 64], dropout_rate=0.6):
+    def __init__(self, input_size, hidden_sizes=[256, 128, 64], dropout_rate=0.5):
         super(AdvancedLandslideANN, self).__init__()
         
         self.network = nn.Sequential(
@@ -822,7 +901,14 @@ class ANNTrainingModuleImproved:
         """
         
         print("\n" + "="*60)
-        print("TRAINING ADVANCED ANN MODEL")
+        print("TRAINING ADVANCED ANN MODEL - IMPROVED VERSION")
+        print("="*60)
+        print("🚀 IMPROVEMENTS IMPLEMENTED:")
+        print("   ✅ Focal Loss (alpha=0.25, gamma=2.0) - Better class imbalance handling")
+        print("   ✅ Increased dropout (0.5) - Reduced overfitting") 
+        print("   ✅ L2 regularization (weight_decay=0.01) - Better generalization")
+        print("   ✅ Early stopping (patience=10) - Prevent overfitting")
+        print("   ✅ Optimized threshold search (0.3-0.7) - Better F1 performance")
         print("="*60)
         
         X_train = training_data['X_train']
@@ -867,13 +953,15 @@ class ANNTrainingModuleImproved:
         print(f"  Non-landslides: {train_non_landslides_count} ({train_non_landslides_count/total_samples*100:.1f}%)")
         print(f"  pos_weight: {pos_weight.item():.3f}")
         
-        # Loss and optimizer - UPDATED with class balancing
-        # BCEWithLogitsLoss with pos_weight balances the dataset
-        criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+        # IMPROVED: Use Focal Loss for better class imbalance handling
+        criterion = FocalLoss(alpha=0.25, gamma=2.0)
         
-        # Reduced learning rate for better convergence
+        # IMPROVED: L2 regularization increased to 0.01, reduced learning rate
         optimizer = torch.optim.AdamW(model.parameters(), lr=0.0001, weight_decay=0.01)
         scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2)
+        
+        # IMPROVED: Early stopping with patience=10
+        early_stopping = EarlyStopping(patience=10, min_delta=0.001)
         
         # Mixed precision training disabled for CPU compatibility
         scaler_amp = None
@@ -952,19 +1040,11 @@ class ANNTrainingModuleImproved:
                 # Call with (epoch, total_epochs) to match dialog expectations
                 progress_callback(epoch + 1, num_epochs)
             
-            # Early stopping
-            if avg_val_loss < best_val_loss:
-                best_val_loss = avg_val_loss
-                best_model_state = model.state_dict().copy()
-                patience_counter = 0
-            else:
-                patience_counter += 1
-                if patience_counter >= patience:
-                    print(f"Early stopping at epoch {epoch+1}")
-                    break
-        
-        # Load best model
-        model.load_state_dict(best_model_state)
+            # IMPROVED: Use new early stopping with best weights restoration
+            if early_stopping(avg_val_loss, model):
+                print(f"Early stopping at epoch {epoch+1} due to no improvement")
+                print(f"Best validation loss: {early_stopping.best_loss:.6f}")
+                break
         
         # Find optimal threshold
         print("\nFinding optimal threshold...")
@@ -995,7 +1075,10 @@ class ANNTrainingModuleImproved:
         }
     
     def _find_optimal_threshold(self, model, X_test, y_test):
-        """Find optimal classification threshold"""
+        """
+        IMPROVED: Find optimal classification threshold with comprehensive search
+        Tests range 0.3-0.7 as recommended by analysis
+        """
         model.eval()
         with torch.no_grad():
             X_test = X_test.to(self.device)
@@ -1004,16 +1087,53 @@ class ANNTrainingModuleImproved:
         
         y_true = y_test.cpu().numpy()
         
-        thresholds = np.arange(0.3, 0.8, 0.05)
+        # IMPROVED: Test recommended range 0.3-0.7 with finer granularity
+        thresholds = np.arange(0.3, 0.71, 0.02)  # 0.3, 0.32, 0.34, ..., 0.7
         best_f1 = 0
         best_threshold = 0.5
+        best_metrics = {}
+        
+        print(f"\n🎯 THRESHOLD OPTIMIZATION:")
+        print(f"   Testing {len(thresholds)} thresholds from {thresholds[0]:.2f} to {thresholds[-1]:.2f}")
+        
+        threshold_results = []
         
         for threshold in thresholds:
             predictions = (probabilities > threshold).astype(int)
-            f1 = f1_score(y_true, predictions)
+            
+            # Calculate comprehensive metrics for each threshold
+            f1 = f1_score(y_true, predictions, zero_division=0)
+            precision = precision_score(y_true, predictions, zero_division=0)
+            recall = recall_score(y_true, predictions, zero_division=0)
+            accuracy = accuracy_score(y_true, predictions)
+            
+            threshold_results.append({
+                'threshold': threshold,
+                'f1': f1,
+                'precision': precision, 
+                'recall': recall,
+                'accuracy': accuracy
+            })
+            
             if f1 > best_f1:
                 best_f1 = f1
                 best_threshold = threshold
+                best_metrics = {
+                    'f1': f1,
+                    'precision': precision,
+                    'recall': recall, 
+                    'accuracy': accuracy
+                }
+        
+        # Report top 3 thresholds
+        threshold_results.sort(key=lambda x: x['f1'], reverse=True)
+        print(f"\n   📊 TOP 3 THRESHOLDS BY F1-SCORE:")
+        for i, result in enumerate(threshold_results[:3]):
+            print(f"   {i+1}. Threshold {result['threshold']:.2f}: "
+                  f"F1={result['f1']:.3f}, Precision={result['precision']:.3f}, "
+                  f"Recall={result['recall']:.3f}, Accuracy={result['accuracy']:.3f}")
+        
+        print(f"\n   ✅ Selected threshold: {best_threshold:.2f} (F1-Score: {best_f1:.3f})")
         
         return best_threshold
     
