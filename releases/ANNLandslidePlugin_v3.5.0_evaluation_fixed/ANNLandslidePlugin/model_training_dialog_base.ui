@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ModelTrainingDialogBase</class>
+ <widget class="QDialog" name="ModelTrainingDialogBase">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>700</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>ANN Model Training</string>
+  </property>
+  
+  <!-- Landslide Points Selection -->
+  <widget class="QLabel" name="label_landslide_points">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>20</y>
+     <width>140</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Landslide Points:</string>
+   </property>
+  </widget>
+  
+  <widget class="QComboBox" name="comboBox_landslide_points">
+   <property name="geometry">
+    <rect>
+     <x>170</x>
+     <y>20</y>
+     <width>450</width>
+     <height>25</height>
+    </rect>
+   </property>
+  </widget>
+  
+  <widget class="QPushButton" name="pushButton_landslide_browse">
+   <property name="geometry">
+    <rect>
+     <x>630</x>
+     <y>20</y>
+     <width>50</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>...</string>
+   </property>
+  </widget>
+  
+  <!-- Raster Layers Section -->
+  <widget class="QLabel" name="label_rasters">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>60</y>
+     <width>140</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Input Raster Layers:</string>
+   </property>
+  </widget>
+  
+  <widget class="QScrollArea" name="scrollArea_rasters">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>90</y>
+     <width>660</width>
+     <height>300</height>
+    </rect>
+   </property>
+   <property name="widgetResizable">
+    <bool>true</bool>
+   </property>
+   <widget class="QWidget" name="scrollAreaWidgetContents_rasters">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>658</width>
+      <height>298</height>
+     </rect>
+    </property>
+   </widget>
+  </widget>
+  
+  <!-- Training Parameters -->
+  <widget class="QGroupBox" name="groupBox_parameters">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>410</y>
+     <width>330</width>
+     <height>120</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Training Parameters</string>
+   </property>
+   
+   <widget class="QLabel" name="label_epochs">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>25</y>
+      <width>80</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Epochs:</string>
+    </property>
+   </widget>
+   
+   <widget class="QSpinBox" name="spinBox_epochs">
+    <property name="geometry">
+     <rect>
+      <x>100</x>
+      <y>25</y>
+      <width>80</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>10</number>
+    </property>
+    <property name="maximum">
+     <number>500</number>
+    </property>
+    <property name="value">
+     <number>150</number>
+    </property>
+   </widget>
+   
+   <widget class="QLabel" name="label_batch_size">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>25</y>
+      <width>80</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Batch Size:</string>
+    </property>
+   </widget>
+   
+   <widget class="QSpinBox" name="spinBox_batch_size">
+    <property name="geometry">
+     <rect>
+      <x>280</x>
+      <y>25</y>
+      <width>40</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>16</number>
+    </property>
+    <property name="maximum">
+     <number>256</number>
+    </property>
+    <property name="value">
+     <number>64</number>
+    </property>
+   </widget>
+   
+   <widget class="QLabel" name="label_test_split">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>55</y>
+      <width>80</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Test Split:</string>
+    </property>
+   </widget>
+   
+   <widget class="QDoubleSpinBox" name="doubleSpinBox_test_split">
+    <property name="geometry">
+     <rect>
+      <x>100</x>
+      <y>55</y>
+      <width>80</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <double>0.1</double>
+    </property>
+    <property name="maximum">
+     <double>0.5</double>
+    </property>
+    <property name="singleStep">
+     <double>0.05</double>
+    </property>
+    <property name="value">
+     <double>0.2</double>
+    </property>
+   </widget>
+   
+   <widget class="QCheckBox" name="checkBox_generate_non_landslides">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>85</y>
+      <width>200</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Auto-generate non-landslide points</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+  </widget>
+  
+  <!-- Output Model Path -->
+  <widget class="QGroupBox" name="groupBox_output">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>410</y>
+     <width>310</width>
+     <height>80</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Output</string>
+   </property>
+   
+   <widget class="QLabel" name="label_output_model">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>25</y>
+      <width>80</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Model Path:</string>
+    </property>
+   </widget>
+   
+   <widget class="QLineEdit" name="lineEdit_output_model">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>50</y>
+      <width>240</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="placeholderText">
+     <string>Path for output model (.pth)</string>
+    </property>
+   </widget>
+   
+   <widget class="QPushButton" name="pushButton_output_browse">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>50</y>
+      <width>40</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>...</string>
+    </property>
+   </widget>
+  </widget>
+  
+  <!-- Progress Bar -->
+  <widget class="QProgressBar" name="progressBar_training">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>540</y>
+     <width>520</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="value">
+    <number>0</number>
+   </property>
+  </widget>
+  
+  <!-- Status Label -->
+  <widget class="QLabel" name="label_status">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>570</y>
+     <width>520</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Ready to train model...</string>
+   </property>
+  </widget>
+  
+  <!-- Dialog Buttons -->
+  <widget class="QPushButton" name="pushButton_start_training">
+   <property name="geometry">
+    <rect>
+     <x>550</x>
+     <y>540</y>
+     <width>120</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Start Training</string>
+   </property>
+  </widget>
+  
+  <widget class="QPushButton" name="pushButton_close">
+   <property name="geometry">
+    <rect>
+     <x>550</x>
+     <y>575</y>
+     <width>120</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Close</string>
+   </property>
+  </widget>
+  
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

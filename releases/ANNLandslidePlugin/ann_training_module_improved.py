@@ -748,84 +748,17 @@ class ANNTrainingModuleImproved:
         print(f"Test:  {test_landslides} landslides ({test_landslides/len(y_test_np)*100:.1f}%), "
               f"{test_non_landslides} non-landslides ({test_non_landslides/len(y_test_np)*100:.1f}%)")
         
-        # If test set is imbalanced (> 60% either class), resample it
+        # Report test set distribution (no artificial rebalancing!)
         test_landslide_ratio = test_landslides / len(y_test_np)
         if test_landslide_ratio > 0.6 or test_landslide_ratio < 0.4:
-            print(f"\n⚠️  Test set imbalanced ({test_landslide_ratio*100:.1f}% landslides)!")
-            print("   Resampling test set to match training distribution...")
-            
-            # Calculate target ratio from training set
-            target_ratio = train_landslides / len(y_train_np)
-            target_test_landslides = int(len(y_test_np) * target_ratio)
-            target_test_non_landslides = len(y_test_np) - target_test_landslides
-            
-            # Get indices of landslides and non-landslides in test set
-            test_landslide_indices = np.where(y_test_np == 1)[0]
-            test_non_landslide_indices = np.where(y_test_np == 0)[0]
-            
-            # Resample to target distribution
-            np.random.seed(42)
-            if len(test_landslide_indices) > target_test_landslides:
-                # Downsample landslides
-                sampled_landslide_indices = np.random.choice(test_landslide_indices, 
-                                                              target_test_landslides, 
-                                                              replace=False)
-            else:
-                # Upsample landslides
-                sampled_landslide_indices = np.random.choice(test_landslide_indices, 
-                                                              target_test_landslides, 
-                                                              replace=True)
-            
-            if len(test_non_landslide_indices) > target_test_non_landslides:
-                # Downsample non-landslides
-                sampled_non_landslide_indices = np.random.choice(test_non_landslide_indices, 
-                                                                  target_test_non_landslides, 
-                                                                  replace=False)
-            else:
-                # Upsample non-landslides
-                sampled_non_landslide_indices = np.random.choice(test_non_landslide_indices, 
-                                                                  target_test_non_landslides, 
-                                                                  replace=True)
-            
-            # Combine and shuffle
-            resampled_indices = np.concatenate([sampled_landslide_indices, sampled_non_landslide_indices])
-            np.random.shuffle(resampled_indices)
-            
-            # Apply resampling (handle different data types)
-            if isinstance(X_test, torch.Tensor):
-                X_test = X_test[resampled_indices]
-                y_test = y_test[resampled_indices]
-            elif isinstance(X_test, pd.DataFrame):
-                # For pandas DataFrame, use .iloc for positional indexing
-                X_test = X_test.iloc[resampled_indices].reset_index(drop=True)
-                y_test = y_test.iloc[resampled_indices].reset_index(drop=True) if isinstance(y_test, pd.Series) else y_test[resampled_indices]
-            else:
-                # For numpy arrays
-                X_test = X_test[resampled_indices]
-                y_test = y_test[resampled_indices]
-            
-            if test_coords is not None:
-                if isinstance(test_coords, pd.DataFrame):
-                    test_coords = test_coords.iloc[resampled_indices].reset_index(drop=True)
-                else:
-                    test_coords = test_coords[resampled_indices]
-            
-            # Verify new balance (handle different data types)
-            if isinstance(y_test, torch.Tensor):
-                y_test_np = y_test.numpy()
-            elif isinstance(y_test, pd.Series):
-                y_test_np = y_test.values
-            else:
-                y_test_np = np.array(y_test).flatten()
-            
-            new_test_landslides = int(np.sum(y_test_np))
-            new_test_non_landslides = len(y_test_np) - new_test_landslides
-            
-            print(f"\n✅ Test set rebalanced:")
-            print(f"   {new_test_landslides} landslides ({new_test_landslides/len(y_test_np)*100:.1f}%), "
-                  f"{new_test_non_landslides} non-landslides ({new_test_non_landslides/len(y_test_np)*100:.1f}%)")
+            print(f"\n📊 Test set shows spatial clustering ({test_landslide_ratio*100:.1f}% landslides)")
+            print("   ✅ Maintaining natural distribution for valid evaluation")
+            print("   📈 Focus on AUC-ROC and Recall for imbalanced assessment")
         else:
-            print(f"\n✅ Test set balance looks good ({test_landslide_ratio*100:.1f}% landslides)")
+            print(f"\n✅ Test set distribution is acceptable ({test_landslide_ratio*100:.1f}% landslides)")
+        
+        # Keep original test set for valid evaluation (no rebalancing!)
+        y_test = y_test_np
         
         # Scale features using RobustScaler (better for outliers)
         print("\n" + "="*50)
@@ -835,11 +768,27 @@ class ANNTrainingModuleImproved:
         X_train_scaled = scaler.fit_transform(X_train)
         X_test_scaled = scaler.transform(X_test)
         
-        # Convert to tensors
+        # Convert to tensors (handle different data types)
         X_train_tensor = torch.tensor(X_train_scaled, dtype=torch.float32)
-        y_train_tensor = torch.tensor(y_train.values, dtype=torch.float32).unsqueeze(1)
         X_test_tensor = torch.tensor(X_test_scaled, dtype=torch.float32)
-        y_test_tensor = torch.tensor(y_test.values, dtype=torch.float32).unsqueeze(1)
+        
+        # Handle y_train and y_test data types properly
+        if hasattr(y_train, 'values'):
+            # pandas Series or DataFrame
+            y_train_array = y_train.values
+        else:
+            # numpy array or other
+            y_train_array = np.array(y_train)
+            
+        if hasattr(y_test, 'values'):
+            # pandas Series or DataFrame  
+            y_test_array = y_test.values
+        else:
+            # numpy array or other
+            y_test_array = np.array(y_test)
+        
+        y_train_tensor = torch.tensor(y_train_array, dtype=torch.float32).unsqueeze(1)
+        y_test_tensor = torch.tensor(y_test_array, dtype=torch.float32).unsqueeze(1)
         
         return {
             'X_train': X_train_tensor,

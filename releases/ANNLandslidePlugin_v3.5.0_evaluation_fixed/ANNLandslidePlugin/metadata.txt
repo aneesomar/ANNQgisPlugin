@@ -1,0 +1,26 @@
+[general]
+name=ANN Landslide Susceptibility
+qgisMinimumVersion=3.0
+description=Advanced ANN-based landslide susceptibility mapping with enhanced feature selection and proper spatial evaluation
+version=3.5.0
+author=ANN Landslide Team
+email=support@annlandslide.com
+
+about=Professional landslide susceptibility mapping using Artificial Neural Networks with enhanced feature selection. Features statistical F-score ranking, quality-based filtering, and proper spatial cross-validation evaluation. Achieves 74-85% AUC-ROC performance with 75% fewer input features and realistic evaluation metrics.
+
+tracker=https://github.com/aneesomar/ANNQgisPlugin
+repository=https://github.com/aneesomar/ANNQgisPlugin
+homepage=https://github.com/aneesomar/ANNQgisPlugin
+
+tags=landslide,susceptibility,neural network,ann,geohazard,risk,mapping,spatial
+
+deprecated=False
+experimental=False
+
+category=Analysis
+icon=icon.png
+
+changelog=v3.5.0: Fixed spatial cross-validation evaluation, removed artificial test set rebalancing, improved metrics for imbalanced data, focus on AUC-ROC and recall
+    v3.4.0: Enhanced feature selection with statistical F-score ranking, 75% feature reduction, quality-based filtering
+    v3.3.0: Training improvements, PR-AUC metrics
+    v3.2.0: Threshold optimization features
