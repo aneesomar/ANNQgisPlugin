@@ -1,0 +1,263 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Advanced Threshold Optimization Report</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .header { background-color: #f0f8ff; padding: 20px; border-radius: 10px; }
+                .method { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+                .best { background-color: #e8f5e8; border-color: #4CAF50; }
+                table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+                th { background-color: #f2f2f2; }
+                .metric { font-weight: bold; }
+                .threshold { color: #2196F3; font-weight: bold; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>🎯 Advanced Threshold Optimization Report</h1>
+                <p><strong>Generated:</strong> October 13, 2025</p>
+                <p><strong>Model:</strong> Improved Landslide Susceptibility Model</p>
+                <p><strong>Validation Samples:</strong> 1923</p>
+            </div>
+        
+        <h2>📊 Optimization Results Summary</h2>
+        <table>
+            <tr>
+                <th>Method</th>
+                <th>Threshold</th>
+                <th>F1 Score</th>
+                <th>Precision</th>
+                <th>Recall</th>
+                <th>Accuracy</th>
+            </tr>
+        
+            <tr class="best">
+                <td>ROC_youden</td>
+                <td class="threshold">1.000</td>
+                <td class="metric">0.347</td>
+                <td>0.273</td>
+                <td>0.476</td>
+                <td>0.708</td>
+            </tr>
+            
+            <tr>
+                <td>PR_f1_max</td>
+                <td class="threshold">1.000</td>
+                <td class="metric">0.347</td>
+                <td>0.273</td>
+                <td>0.476</td>
+                <td>0.708</td>
+            </tr>
+            
+            <tr>
+                <td>PR_balanced_pr</td>
+                <td class="threshold">1.000</td>
+                <td class="metric">0.347</td>
+                <td>0.273</td>
+                <td>0.476</td>
+                <td>0.708</td>
+            </tr>
+            
+            <tr>
+                <td>ROC_closest_to_corner</td>
+                <td class="threshold">0.798</td>
+                <td class="metric">0.330</td>
+                <td>0.232</td>
+                <td>0.575</td>
+                <td>0.620</td>
+            </tr>
+            
+            <tr>
+                <td>F-beta_1.0</td>
+                <td class="threshold">0.780</td>
+                <td class="metric">0.330</td>
+                <td>0.231</td>
+                <td>0.575</td>
+                <td>0.619</td>
+            </tr>
+            
+            <tr>
+                <td>F-beta_0.5</td>
+                <td class="threshold">0.840</td>
+                <td class="metric">0.330</td>
+                <td>0.232</td>
+                <td>0.572</td>
+                <td>0.621</td>
+            </tr>
+            
+            <tr>
+                <td>F-beta_1.5</td>
+                <td class="threshold">0.480</td>
+                <td class="metric">0.324</td>
+                <td>0.221</td>
+                <td>0.607</td>
+                <td>0.588</td>
+            </tr>
+            
+            <tr>
+                <td>F-beta_2.0</td>
+                <td class="threshold">0.140</td>
+                <td class="metric">0.317</td>
+                <td>0.212</td>
+                <td>0.629</td>
+                <td>0.558</td>
+            </tr>
+            
+            <tr>
+                <td>Cost_Sensitive</td>
+                <td class="threshold">0.140</td>
+                <td class="metric">0.317</td>
+                <td>0.212</td>
+                <td>0.629</td>
+                <td>0.558</td>
+            </tr>
+            
+            <tr>
+                <td>Landslide_Focused_Recall_0.9</td>
+                <td class="threshold">0.050</td>
+                <td class="metric">0.310</td>
+                <td>0.205</td>
+                <td>0.639</td>
+                <td>0.537</td>
+            </tr>
+            
+        </table>
+        
+        <h2>🔍 Detailed Method Analysis</h2>
+        
+            <div class="method">
+                <h3>ROC_youden</h3>
+                <p><strong>Optimal Threshold:</strong> <span class="threshold">1.000</span></p>
+                <p><strong>Key Metrics:</strong></p>
+                <ul>
+                    <li>F1 Score: 0.347</li>
+                    <li>Precision: 0.273</li>
+                    <li>Recall: 0.476</li>
+                    <li>Accuracy: 0.708</li>
+                </ul>
+            </div>
+            
+            <div class="method">
+                <h3>PR_f1_max</h3>
+                <p><strong>Optimal Threshold:</strong> <span class="threshold">1.000</span></p>
+                <p><strong>Key Metrics:</strong></p>
+                <ul>
+                    <li>F1 Score: 0.347</li>
+                    <li>Precision: 0.273</li>
+                    <li>Recall: 0.476</li>
+                    <li>Accuracy: 0.708</li>
+                </ul>
+            </div>
+            
+            <div class="method">
+                <h3>PR_balanced_pr</h3>
+                <p><strong>Optimal Threshold:</strong> <span class="threshold">1.000</span></p>
+                <p><strong>Key Metrics:</strong></p>
+                <ul>
+                    <li>F1 Score: 0.347</li>
+                    <li>Precision: 0.273</li>
+                    <li>Recall: 0.476</li>
+                    <li>Accuracy: 0.708</li>
+                </ul>
+            </div>
+            
+            <div class="method">
+                <h3>ROC_closest_to_corner</h3>
+                <p><strong>Optimal Threshold:</strong> <span class="threshold">0.798</span></p>
+                <p><strong>Key Metrics:</strong></p>
+                <ul>
+                    <li>F1 Score: 0.330</li>
+                    <li>Precision: 0.232</li>
+                    <li>Recall: 0.575</li>
+                    <li>Accuracy: 0.620</li>
+                </ul>
+            </div>
+            
+            <div class="method">
+                <h3>F-beta_1.0</h3>
+                <p><strong>Optimal Threshold:</strong> <span class="threshold">0.780</span></p>
+                <p><strong>Key Metrics:</strong></p>
+                <ul>
+                    <li>F1 Score: 0.330</li>
+                    <li>Precision: 0.231</li>
+                    <li>Recall: 0.575</li>
+                    <li>Accuracy: 0.619</li>
+                </ul>
+            </div>
+            
+            <div class="method">
+                <h3>F-beta_0.5</h3>
+                <p><strong>Optimal Threshold:</strong> <span class="threshold">0.840</span></p>
+                <p><strong>Key Metrics:</strong></p>
+                <ul>
+                    <li>F1 Score: 0.330</li>
+                    <li>Precision: 0.232</li>
+                    <li>Recall: 0.572</li>
+                    <li>Accuracy: 0.621</li>
+                </ul>
+            </div>
+            
+            <div class="method">
+                <h3>F-beta_1.5</h3>
+                <p><strong>Optimal Threshold:</strong> <span class="threshold">0.480</span></p>
+                <p><strong>Key Metrics:</strong></p>
+                <ul>
+                    <li>F1 Score: 0.324</li>
+                    <li>Precision: 0.221</li>
+                    <li>Recall: 0.607</li>
+                    <li>Accuracy: 0.588</li>
+                </ul>
+            </div>
+            
+            <div class="method">
+                <h3>F-beta_2.0</h3>
+                <p><strong>Optimal Threshold:</strong> <span class="threshold">0.140</span></p>
+                <p><strong>Key Metrics:</strong></p>
+                <ul>
+                    <li>F1 Score: 0.317</li>
+                    <li>Precision: 0.212</li>
+                    <li>Recall: 0.629</li>
+                    <li>Accuracy: 0.558</li>
+                </ul>
+            </div>
+            
+            <div class="method">
+                <h3>Cost_Sensitive</h3>
+                <p><strong>Optimal Threshold:</strong> <span class="threshold">0.140</span></p>
+                <p><strong>Key Metrics:</strong></p>
+                <ul>
+                    <li>F1 Score: 0.317</li>
+                    <li>Precision: 0.212</li>
+                    <li>Recall: 0.629</li>
+                    <li>Accuracy: 0.558</li>
+                </ul>
+            </div>
+            
+            <div class="method">
+                <h3>Landslide_Focused_Recall_0.9</h3>
+                <p><strong>Optimal Threshold:</strong> <span class="threshold">0.050</span></p>
+                <p><strong>Key Metrics:</strong></p>
+                <ul>
+                    <li>F1 Score: 0.310</li>
+                    <li>Precision: 0.205</li>
+                    <li>Recall: 0.639</li>
+                    <li>Accuracy: 0.537</li>
+                </ul>
+            </div>
+            
+        <h2>📈 Visualizations</h2>
+        <p>Comprehensive analysis plots have been saved as: <strong>threshold_optimization_analysis.png</strong></p>
+        
+        <h2>💡 Recommendations</h2>
+        <div class="method">
+            <h3>🎯 Best Overall Performance</h3>
+            <p>Based on F1 score, the optimal method is: <strong>ROC_youden</strong></p>
+            <p>Recommended threshold: <span class="threshold">1.000</span></p>
+        </div>
+        
+        </body>
+        </html>
+        

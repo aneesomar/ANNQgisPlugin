@@ -20,7 +20,8 @@ from sklearn.utils.class_weight import compute_class_weight
 from sklearn.cluster import KMeans
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score, roc_auc_score,
-    roc_curve, precision_recall_curve, fbeta_score, confusion_matrix
+    roc_curve, precision_recall_curve, fbeta_score, confusion_matrix,
+    average_precision_score
 )
 from scipy.spatial.distance import cdist
 import torch
@@ -94,7 +95,7 @@ class EarlyStopping:
     Early stopping to avoid overfitting during training
     """
     
-    def __init__(self, patience=10, min_delta=0.001, restore_best_weights=True):
+    def __init__(self, patience=20, min_delta=0.0005, restore_best_weights=True):
         self.patience = patience
         self.min_delta = min_delta
         self.restore_best_weights = restore_best_weights
@@ -251,22 +252,32 @@ def spatial_train_test_split(X, y, coordinates, test_size=0.2, n_blocks=10,
     test_blocks = []
     test_samples_count = 0
     
-    # Greedily select blocks for test set
-    for block_data in block_info:
+    # IMPROVED: Balance-aware block selection for test set
+    overall_pos_prop = np.mean(y)
+    test_blocks = []
+    test_samples_count = 0
+    
+    # First, select blocks with proportions closest to overall proportion
+    block_info_balanced = sorted(block_info, 
+                                key=lambda x: abs(x['pos_proportion'] - overall_pos_prop))
+    
+    for block_data in block_info_balanced:
         if test_samples_count < target_test_samples:
             test_blocks.append(block_data['block'])
             test_samples_count += block_data['size']
         if test_samples_count >= target_test_samples * 0.8:  # Allow some flexibility
             break
     
-    # If we don't have enough samples, add more blocks
+    # If still not enough samples, add more blocks (prioritizing balanced ones)
     if test_samples_count < target_test_samples * 0.5:
-        for block_data in block_info:
-            if block_data['block'] not in test_blocks:
-                test_blocks.append(block_data['block'])
-                test_samples_count += block_data['size']
-                if test_samples_count >= target_test_samples * 0.8:
-                    break
+        remaining_blocks = [b for b in block_info if b['block'] not in test_blocks]
+        remaining_blocks.sort(key=lambda x: abs(x['pos_proportion'] - overall_pos_prop))
+        
+        for block_data in remaining_blocks:
+            test_blocks.append(block_data['block'])
+            test_samples_count += block_data['size']
+            if test_samples_count >= target_test_samples * 0.8:
+                break
     
     # Create train/test indices
     test_mask = np.isin(block_labels, test_blocks)
@@ -913,7 +924,7 @@ class ANNTrainingModuleImproved:
         print("   ✅ Focal Loss (alpha=0.25, gamma=2.0) - Better class imbalance handling")
         print("   ✅ Increased dropout (0.5) - Reduced overfitting") 
         print("   ✅ L2 regularization (weight_decay=0.01) - Better generalization")
-        print("   ✅ Early stopping (patience=10) - Prevent overfitting")
+        print("   ✅ Early stopping (patience=20) - Prevent overfitting")
         print("   ✅ Optimized threshold search (0.3-0.7) - Better F1 performance")
         print("="*60)
         
@@ -972,8 +983,8 @@ class ANNTrainingModuleImproved:
         optimizer = torch.optim.AdamW(model.parameters(), lr=0.0001, weight_decay=0.01)
         scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2)
         
-        # IMPROVED: Early stopping with patience=10
-        early_stopping = EarlyStopping(patience=10, min_delta=0.001)
+        # IMPROVED: Early stopping with patience=20
+        early_stopping = EarlyStopping(patience=20, min_delta=0.0005)
         
         # Mixed precision training disabled for CPU compatibility
         scaler_amp = None
@@ -1354,12 +1365,25 @@ class ANNTrainingModuleImproved:
             'youden_j': j_scores[best_j_idx]
         }
         
-        # 2. Precision-Recall optimization (F1 maximization)
+        # 2. Precision-Recall optimization (balanced F1 with precision filter)
         print("   📈 Precision-Recall Optimization...")
         precision, recall, pr_thresholds = precision_recall_curve(y_true, y_proba)
-        f1_scores = 2 * (precision[:-1] * recall[:-1]) / (precision[:-1] + recall[:-1] + 1e-8)
-        best_f1_idx = np.argmax(f1_scores)
-        pr_threshold = pr_thresholds[best_f1_idx]
+        
+        # FINAL FIX: Only consider thresholds with decent precision
+        valid_indices = precision[:-1] >= 0.4  # Minimum 40% precision
+        if np.any(valid_indices):
+            filtered_precision = precision[:-1][valid_indices]
+            filtered_recall = recall[:-1][valid_indices]
+            filtered_thresholds = pr_thresholds[valid_indices]
+            
+            f1_scores = 2 * (filtered_precision * filtered_recall) / (filtered_precision + filtered_recall + 1e-8)
+            best_f1_idx = np.argmax(f1_scores)
+            pr_threshold = filtered_thresholds[best_f1_idx]
+        else:
+            # Fallback to original if no valid precision found
+            f1_scores = 2 * (precision[:-1] * recall[:-1]) / (precision[:-1] + recall[:-1] + 1e-8)
+            best_f1_idx = np.argmax(f1_scores)
+            pr_threshold = pr_thresholds[best_f1_idx]
         
         y_pred_pr = (y_proba >= pr_threshold).astype(int)
         optimization_results['pr_f1_max'] = {
@@ -1370,32 +1394,32 @@ class ANNTrainingModuleImproved:
             'accuracy': accuracy_score(y_true, y_pred_pr)
         }
         
-        # 3. Landslide-focused optimization (prioritize recall)
+        # 3. Landslide-focused optimization (precision-balanced approach)
         print("   🏔️ Landslide-Focused Optimization...")
-        test_thresholds = np.arange(0.05, 0.96, 0.01)
-        best_recall_score = 0
-        best_recall_threshold = 0.5
+        test_thresholds = np.arange(0.3, 0.81, 0.01)  # FINAL FIX: Start from 0.3
+        best_balanced_score = 0
+        best_balanced_threshold = 0.5
         
         for threshold in test_thresholds:
             y_pred = (y_proba >= threshold).astype(int)
             recall = recall_score(y_true, y_pred, zero_division=0)
             precision = precision_score(y_true, y_pred, zero_division=0)
             
-            # Weighted score favoring recall (2:1 ratio) for landslide detection
-            if recall >= 0.6:  # Minimum acceptable recall
-                score = (2 * recall + precision) / 3
-                if score > best_recall_score:
-                    best_recall_score = score
-                    best_recall_threshold = threshold
+            # FINAL FIX: Require better precision balance
+            if recall >= 0.4 and precision >= 0.5:  # Higher precision requirement
+                f1_5 = fbeta_score(y_true, y_pred, beta=1.2, zero_division=0)  # Less recall bias
+                if f1_5 > best_balanced_score:
+                    best_balanced_score = f1_5
+                    best_balanced_threshold = threshold
         
-        y_pred_landslide = (y_proba >= best_recall_threshold).astype(int)
+        y_pred_landslide = (y_proba >= best_balanced_threshold).astype(int)
         optimization_results['landslide_focused'] = {
-            'threshold': best_recall_threshold,
+            'threshold': best_balanced_threshold,
             'f1': f1_score(y_true, y_pred_landslide, zero_division=0),
             'precision': precision_score(y_true, y_pred_landslide, zero_division=0),
             'recall': recall_score(y_true, y_pred_landslide, zero_division=0),
             'accuracy': accuracy_score(y_true, y_pred_landslide),
-            'weighted_score': best_recall_score
+            'weighted_score': best_balanced_score
         }
         
         # 4. Cost-sensitive optimization
@@ -1511,6 +1535,7 @@ class ANNTrainingModuleImproved:
             'recall': recall_score(y_true, predictions),
             'f1': f1_score(y_true, predictions),
             'auc_roc': roc_auc_score(y_true, probabilities),
+            'pr_auc': average_precision_score(y_true, probabilities),
             'test_size': total_samples,
             'test_landslides': num_landslides,
             'test_non_landslides': num_non_landslides
@@ -1527,6 +1552,7 @@ class ANNTrainingModuleImproved:
         print(f"Recall:    {metrics['recall']:.4f}")
         print(f"F1 Score:  {metrics['f1']:.4f}")
         print(f"AUC-ROC:   {metrics['auc_roc']:.4f}")
+        print(f"PR-AUC:    {metrics['pr_auc']:.4f}")
         print("="*60)
         
         return metrics
